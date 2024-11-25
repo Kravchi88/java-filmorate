@@ -20,4 +20,6 @@ public class Film {
 
     @Positive(message = "Duration must be positive")
     private int duration;
+
+    private int likes;
 }
