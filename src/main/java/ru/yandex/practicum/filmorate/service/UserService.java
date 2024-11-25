@@ -11,21 +11,45 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+/**
+ * Service class for managing users and their related operations.
+ */
 @Service
 @Slf4j
 public final class UserService {
+
+    /**
+     * Storage for handling user-related data.
+     */
     private final UserStorage storage;
 
+    /**
+     * Constructor for {@code UserService}.
+     *
+     * @param userStorage storage for managing users.
+     */
     @Autowired
     public UserService(final UserStorage userStorage) {
         this.storage = userStorage;
     }
 
+    /**
+     * Fetches all users.
+     *
+     * @return a collection of all users.
+     */
     public Collection<User> getAllUsers() {
         log.info("Fetching all users");
         return storage.getAllUsers();
     }
 
+    /**
+     * Fetches a user by their ID.
+     *
+     * @param id the ID of the user.
+     * @return the user with the specified ID.
+     * @throws NotFoundException if the user does not exist.
+     */
     public User getUserById(final long id) {
         User user = storage.getUserById(id)
                 .orElseThrow(() -> new NotFoundException(
@@ -35,6 +59,12 @@ public final class UserService {
         return user;
     }
 
+    /**
+     * Adds a new user.
+     *
+     * @param user the user to add.
+     * @return the added user.
+     */
     public User addUser(final User user) {
         validateUsername(user);
         User addedUser = storage.addUser(user);
@@ -42,6 +72,13 @@ public final class UserService {
         return addedUser;
     }
 
+    /**
+     * Updates an existing user.
+     *
+     * @param user the user with updated information.
+     * @return the updated user.
+     * @throws NotFoundException if the user does not exist.
+     */
     public User updateUser(final User user) {
         validateUsername(user);
         User updatedUser = storage.updateUser(user)
@@ -52,11 +89,23 @@ public final class UserService {
         return updatedUser;
     }
 
+    /**
+     * Deletes a user by their ID.
+     *
+     * @param id the ID of the user to delete.
+     */
     public void deleteUser(final long id) {
         storage.deleteUser(id);
         log.info("Deleted user with id {}", id);
     }
 
+    /**
+     * Adds a friend relationship between two users.
+     *
+     * @param userId   the ID of the user adding the friend.
+     * @param friendId the ID of the user to be added as a friend.
+     * @throws ValidationException if a user attempts to add themselves as a friend.
+     */
     public void addFriend(final long userId, final long friendId) {
         if (userId == friendId) {
             throw new ValidationException(
@@ -68,6 +117,13 @@ public final class UserService {
         log.info("User with id {} added user with id {} as a friend", userId, friendId);
     }
 
+    /**
+     * Removes a friend relationship between two users.
+     *
+     * @param userId   the ID of the user removing the friend.
+     * @param friendId the ID of the user to be removed as a friend.
+     * @throws ValidationException if a user attempts to remove themselves as a friend.
+     */
     public void removeFriend(final long userId, final long friendId) {
         if (userId == friendId) {
             throw new ValidationException(
@@ -79,6 +135,12 @@ public final class UserService {
         log.info("User with id {} removed user with id {} from friends", userId, friendId);
     }
 
+    /**
+     * Fetches a collection of friends for a user.
+     *
+     * @param userId the ID of the user.
+     * @return a collection of the user's friends.
+     */
     public Collection<User> getFriends(final long userId) {
         User user = getUserById(userId);
         Collection<User> friends = user.getFriends()
@@ -89,6 +151,13 @@ public final class UserService {
         return friends;
     }
 
+    /**
+     * Fetches common friends between two users.
+     *
+     * @param userId   the ID of the first user.
+     * @param otherId  the ID of the second user.
+     * @return a collection of common friends between the two users.
+     */
     public Collection<User> getCommonFriends(final long userId, final long otherId) {
         User user = getUserById(userId);
         User other = getUserById(otherId);
@@ -104,6 +173,11 @@ public final class UserService {
         return commonFriends;
     }
 
+    /**
+     * Validates the username of a user. If the name is null or blank, it is set to the user's login.
+     *
+     * @param user the user to validate.
+     */
     private void validateUsername(final User user) {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
