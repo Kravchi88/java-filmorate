@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Component
-public class InMemoryUserStorage implements UserStorage {
+public final class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> users = new HashMap<>();
     private long nextId = 1;
 
@@ -19,19 +19,19 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public Optional<User> getUserById(long id) {
+    public Optional<User> getUserById(final long id) {
         return Optional.ofNullable(users.get(id));
     }
 
     @Override
-    public User addUser(User user) {
+    public User addUser(final User user) {
         user.setId(nextId++);
         users.put(user.getId(), user);
         return user;
     }
 
     @Override
-    public Optional<User> updateUser(User user) {
+    public Optional<User> updateUser(final User user) {
         if (!users.containsKey(user.getId())) {
             return Optional.empty();
         }
@@ -40,7 +40,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public void deleteUser(long id) {
+    public void deleteUser(final long id) {
         users.remove(id);
     }
 }

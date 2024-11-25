@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Component
-public class InMemoryFilmStorage implements FilmStorage {
+public final class InMemoryFilmStorage implements FilmStorage {
     private final Map<Long, Film> films = new HashMap<>();
     private long nextId = 1;
 
@@ -19,19 +19,19 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Optional<Film> getFilmById(long id) {
+    public Optional<Film> getFilmById(final long id) {
         return Optional.ofNullable(films.get(id));
     }
 
     @Override
-    public Film addFilm(Film film) {
+    public Film addFilm(final Film film) {
         film.setId(nextId++);
         films.put(film.getId(), film);
         return film;
     }
 
     @Override
-    public Optional<Film> updateFilm(Film film) {
+    public Optional<Film> updateFilm(final Film film) {
         if (!films.containsKey(film.getId())) {
             return Optional.empty();
         }
@@ -40,7 +40,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public void deleteFilm(long id) {
+    public void deleteFilm(final long id) {
         films.remove(id);
     }
 }
