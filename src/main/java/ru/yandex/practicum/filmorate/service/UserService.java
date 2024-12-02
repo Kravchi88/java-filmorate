@@ -39,7 +39,7 @@ public final class UserService {
      * @return a collection of all users.
      */
     public Collection<User> getAllUsers() {
-        log.info("Fetching all users");
+        log.debug("Fetching all users");
         return storage.getAllUsers();
     }
 
@@ -55,7 +55,7 @@ public final class UserService {
                 .orElseThrow(() -> new NotFoundException(
                         "User with id = " + id + " doesn't exist"
                 ));
-        log.info("Retrieved user with id {}: {}", id, user);
+        log.debug("Retrieved user with id {}", id);
         return user;
     }
 
@@ -68,7 +68,7 @@ public final class UserService {
     public User addUser(final User user) {
         validateUsername(user);
         User addedUser = storage.addUser(user);
-        log.info("Added new user: {}", addedUser);
+        log.debug("Added new user with id {}", addedUser.getId());
         return addedUser;
     }
 
@@ -85,7 +85,7 @@ public final class UserService {
                 .orElseThrow(() -> new NotFoundException(
                         "User with id = " + user.getId() + " doesn't exist"
                 ));
-        log.info("Updated user with id {}: {}", user.getId(), updatedUser);
+        log.debug("Updated user with id {}", user.getId());
         return updatedUser;
     }
 
@@ -96,7 +96,7 @@ public final class UserService {
      */
     public void deleteUser(final long id) {
         storage.deleteUser(id);
-        log.info("Deleted user with id {}", id);
+        log.debug("Deleted user with id {}", id);
     }
 
     /**
@@ -114,7 +114,7 @@ public final class UserService {
         }
         getUserById(userId).getFriends().add(friendId);
         getUserById(friendId).getFriends().add(userId);
-        log.info("User with id {} added user with id {} as a friend", userId, friendId);
+        log.debug("User with id {} added user with id {} as a friend", userId, friendId);
     }
 
     /**
@@ -132,7 +132,7 @@ public final class UserService {
         }
         getUserById(userId).getFriends().remove(friendId);
         getUserById(friendId).getFriends().remove(userId);
-        log.info("User with id {} removed user with id {} from friends", userId, friendId);
+        log.debug("User with id {} removed user with id {} from friends", userId, friendId);
     }
 
     /**
@@ -147,7 +147,8 @@ public final class UserService {
                 .stream()
                 .map(this::getUserById)
                 .collect(Collectors.toSet());
-        log.info("Retrieved friends for user with id {}: {}", userId, friends);
+        log.debug("Retrieved friends for user with id {}: {}", userId, friends
+                .stream().map(User::getId).collect(Collectors.toSet()));
         return friends;
     }
 
@@ -166,9 +167,9 @@ public final class UserService {
                 .filter(id -> other.getFriends().contains(id))
                 .map(this::getUserById)
                 .collect(Collectors.toSet());
-        log.info(
+        log.debug(
                 "Retrieved common friends between user with id {} and user with id {}: {}",
-                userId, otherId, commonFriends
+                userId, otherId, commonFriends.stream().map(User::getId).collect(Collectors.toSet())
         );
         return commonFriends;
     }
@@ -181,7 +182,7 @@ public final class UserService {
     private void validateUsername(final User user) {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
-            log.info(
+            log.debug(
                     "Set name for user with id {} to their login: {}",
                     user.getId(), user.getLogin()
             );

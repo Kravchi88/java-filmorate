@@ -4,9 +4,11 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * A memory-based implementation of the {@link FilmStorage} interface.
@@ -33,6 +35,21 @@ public final class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Collection<Film> getAllFilms() {
         return films.values();
+    }
+
+    /**
+     * Retrieves the top films based on the number of likes, sorted in descending order.
+     *
+     * @param count the maximum number of top films to retrieve.
+     * @return a collection of the top films, limited to the specified count.
+     */
+    @Override
+    public Collection<Film> getTopFilms(int count) {
+        return getAllFilms()
+                .stream()
+                .sorted(Comparator.comparingInt(Film::getLikes).reversed())
+                .limit(count)
+                .collect(Collectors.toList());
     }
 
     /**

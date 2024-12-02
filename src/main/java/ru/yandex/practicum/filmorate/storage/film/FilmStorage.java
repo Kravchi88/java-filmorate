@@ -18,6 +18,14 @@ public interface FilmStorage {
     Collection<Film> getAllFilms();
 
     /**
+     * Retrieves the top films based on the number of likes, sorted in descending order.
+     *
+     * @param count the maximum number of top films to retrieve.
+     * @return a collection of the top films, limited to the specified count.
+     */
+    Collection<Film> getTopFilms(int count);
+
+    /**
      * Retrieves a film by its ID.
      *
      * @param id the ID of the film to retrieve.

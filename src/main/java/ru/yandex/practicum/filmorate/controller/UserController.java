@@ -48,7 +48,7 @@ public final class UserController {
      */
     @GetMapping
     public Collection<User> getAllUsers() {
-        log.info("Received GET request for all users");
+        log.debug("Received GET request for all users");
         return service.getAllUsers();
     }
 
@@ -60,7 +60,7 @@ public final class UserController {
      */
     @GetMapping("/{id}")
     public User getUserById(@PathVariable("id") final long id) {
-        log.info("Received GET request for user with id {}", id);
+        log.debug("Received GET request for user with id {}", id);
         return service.getUserById(id);
     }
 
@@ -73,7 +73,7 @@ public final class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public User addUser(@Valid @RequestBody final User user) {
-        log.info("Received POST request to add a user: {}", user);
+        log.debug("Received POST request to add a user: {}", user.getLogin());
         return service.addUser(user);
     }
 
@@ -85,7 +85,7 @@ public final class UserController {
      */
     @PutMapping
     public User updateUser(@Valid @RequestBody final User user) {
-        log.info("Received PUT request to update a user: {}", user);
+        log.debug("Received PUT request to update a user with id: {}", user.getId());
         return service.updateUser(user);
     }
 
@@ -96,7 +96,7 @@ public final class UserController {
      */
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable("id") final long id) {
-        log.info("Received DELETE request to remove user with id {}", id);
+        log.debug("Received DELETE request to remove user with id {}", id);
         service.deleteUser(id);
     }
 
@@ -111,7 +111,7 @@ public final class UserController {
             @PathVariable("id") final long userId,
             @PathVariable("friendId") final long friendId
     ) {
-        log.info(
+        log.debug(
                 "Received PUT request to add friend with id {} to user with id {}",
                 friendId, userId
         );
@@ -129,7 +129,7 @@ public final class UserController {
             @PathVariable("id") final long userId,
             @PathVariable("friendId") final long friendId
     ) {
-        log.info(
+        log.debug(
                 "Received DELETE request to remove friend with id {} from user with id {}",
                 friendId, userId
         );
@@ -144,7 +144,7 @@ public final class UserController {
      */
     @GetMapping("/{id}/friends")
     public Collection<User> getFriends(@PathVariable("id") final long userId) {
-        log.info("Received GET request for friends of user with id {}", userId);
+        log.debug("Received GET request for friends of user with id {}", userId);
         return service.getFriends(userId);
     }
 
@@ -160,7 +160,7 @@ public final class UserController {
             @PathVariable("id") final long userId,
             @PathVariable("otherId") final long otherId
     ) {
-        log.info(
+        log.debug(
                 "Received GET request for common friends between user with id {} and user with id {}",
                 userId, otherId
         );

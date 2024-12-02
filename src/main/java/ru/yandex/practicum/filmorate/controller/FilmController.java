@@ -50,7 +50,7 @@ public final class FilmController {
      */
     @GetMapping
     public Collection<Film> getAllFilms() {
-        log.info("Received GET request for all films");
+        log.debug("Received GET request for all films");
         return service.getAllFilms();
     }
 
@@ -62,7 +62,7 @@ public final class FilmController {
      */
     @GetMapping("/{id}")
     public Film getFilmById(@PathVariable final long id) {
-        log.info("Received GET request for film with id {}", id);
+        log.debug("Received GET request for film with id {}", id);
         return service.getFilmById(id);
     }
 
@@ -75,7 +75,7 @@ public final class FilmController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Film addFilm(@Valid @RequestBody final Film film) {
-        log.info("Received POST request to add a film: {}", film);
+        log.debug("Received POST request to add a film: {}", film.getName());
         return service.addFilm(film);
     }
 
@@ -87,7 +87,7 @@ public final class FilmController {
      */
     @PutMapping
     public Film updateFilm(@Valid @RequestBody final Film film) {
-        log.info("Received PUT request to update a film: {}", film);
+        log.debug("Received PUT request to update a film with id: {}", film.getId());
         return service.updateFilm(film);
     }
 
@@ -98,7 +98,7 @@ public final class FilmController {
      */
     @DeleteMapping("/{id}")
     public void deleteFilm(@PathVariable("id") final long id) {
-        log.info("Received DELETE request to remove film with id {}", id);
+        log.debug("Received DELETE request to remove film with id {}", id);
         service.deleteFilm(id);
     }
 
@@ -113,7 +113,7 @@ public final class FilmController {
             @PathVariable("id") final long filmId,
             @PathVariable("userId") final long userId
     ) {
-        log.info(
+        log.debug(
                 "Received PUT request to add like from user {} to film {}",
                 userId, filmId
         );
@@ -131,7 +131,7 @@ public final class FilmController {
             @PathVariable("id") final long filmId,
             @PathVariable("userId") final long userId
     ) {
-        log.info(
+        log.debug(
                 "Received DELETE request to remove like from user {} for film {}",
                 userId, filmId
         );
@@ -149,7 +149,7 @@ public final class FilmController {
     public Collection<Film> getTopFilms(
             @RequestParam(value = "count", defaultValue = "10") final int count
     ) {
-        log.info("Received GET request for top {} films", count);
+        log.debug("Received GET request for top {} films", count);
 
         if (count <= 0) {
             throw new ValidationException("Count must be greater than 0");

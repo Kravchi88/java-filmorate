@@ -11,8 +11,6 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.stream.Collectors;
 
 /**
  * Service class for managing films and their associated operations.
@@ -54,7 +52,7 @@ public final class FilmService {
      * @return a collection of all films.
      */
     public Collection<Film> getAllFilms() {
-        log.info("Fetching all films");
+        log.debug("Fetching all films");
         return storage.getAllFilms();
     }
 
@@ -70,7 +68,7 @@ public final class FilmService {
                 .orElseThrow(() -> new NotFoundException(
                         "Film with id = " + id + " doesn't exist"
                 ));
-        log.info("Retrieved film with id {}: {}", id, film);
+        log.debug("Retrieved film with id {}", id);
         return film;
     }
 
@@ -84,7 +82,7 @@ public final class FilmService {
     public Film addFilm(final Film film) {
         validateReleaseDate(film);
         Film addedFilm = storage.addFilm(film);
-        log.info("Added new film: {}", addedFilm);
+        log.debug("Added new film with id {}", addedFilm.getId());
         return addedFilm;
     }
 
@@ -102,7 +100,7 @@ public final class FilmService {
                 .orElseThrow(() -> new NotFoundException(
                         "Film with id = " + film.getId() + " doesn't exist"
                 ));
-        log.info("Updated film with id {}: {}", film.getId(), updatedFilm);
+        log.debug("Updated film with id {}", film.getId());
         return updatedFilm;
     }
 
@@ -113,7 +111,7 @@ public final class FilmService {
      */
     public void deleteFilm(final long id) {
         storage.deleteFilm(id);
-        log.info("Deleted film with id {}", id);
+        log.debug("Deleted film with id {}", id);
     }
 
     /**
@@ -129,9 +127,9 @@ public final class FilmService {
         if (!user.getLikedFilms().contains(filmId)) {
             user.getLikedFilms().add(filmId);
             film.setLikes(film.getLikes() + 1);
-            log.info("User with id {} liked film with id {}", userId, filmId);
+            log.debug("User with id {} liked film with id {}", userId, filmId);
         } else {
-            log.info("User with id {} already liked film with id {}", userId, filmId);
+            log.debug("User with id {} already liked film with id {}", userId, filmId);
         }
     }
 
@@ -150,25 +148,21 @@ public final class FilmService {
             if (film.getLikes() > 0) {
                 film.setLikes(film.getLikes() - 1);
             }
-            log.info("User with id {} removed like from film with id {}", userId, filmId);
+            log.debug("User with id {} removed like from film with id {}", userId, filmId);
         } else {
-            log.info("User with id {} has not liked film with id {}", userId, filmId);
+            log.debug("User with id {} has not liked film with id {}", userId, filmId);
         }
     }
 
     /**
-     * Retrieves the top films based on the number of likes.
+     * Fetches the top films based on the number of likes.
      *
      * @param count the maximum number of films to return.
      * @return a collection of the top films.
      */
     public Collection<Film> getTopFilms(final int count) {
-        Collection<Film> topFilms = getAllFilms()
-                .stream()
-                .sorted(Comparator.comparingInt(Film::getLikes).reversed())
-                .limit(count)
-                .collect(Collectors.toList());
-        log.info("Retrieved top {} films", count);
+        Collection<Film> topFilms = storage.getTopFilms(count);
+        log.debug("Retrieved top {} films", count);
         return topFilms;
     }
 
@@ -184,6 +178,6 @@ public final class FilmService {
                     "Release date can't be before December 28, 1895"
             );
         }
-        log.info("Validated release date for film: {}", film.getReleaseDate());
+        log.debug("Validated release date for film: {}", film.getReleaseDate());
     }
 }
