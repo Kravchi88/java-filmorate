@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 /**
  * Represents a film with basic details like name, description, release date, duration, and likes.
@@ -59,4 +60,15 @@ public class Film {
      * This value is managed internally and does not have validation constraints.
      */
     private int likes;
+
+    /**
+     * List of genres associated with the film.
+     */
+    private Set<String> genres;
+
+    /**
+     * Age rating of the film as defined by the Motion Picture Association (MPA).
+     */
+    @NotNull(message = "MPA rating can't be null")
+    private String mpaRating;
 }

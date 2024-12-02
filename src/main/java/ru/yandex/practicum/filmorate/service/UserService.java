@@ -112,8 +112,8 @@ public final class UserService {
                     "User cannot add themselves as a friend"
             );
         }
-        getUserById(userId).getFriends().add(friendId);
-        getUserById(friendId).getFriends().add(userId);
+        getUserById(userId).getFriends().put(friendId, true);
+        getUserById(friendId).getFriends().put(userId, true);
         log.debug("User with id {} added user with id {} as a friend", userId, friendId);
     }
 
@@ -143,7 +143,7 @@ public final class UserService {
      */
     public Collection<User> getFriends(final long userId) {
         User user = getUserById(userId);
-        Collection<User> friends = user.getFriends()
+        Collection<User> friends = user.getFriends().keySet()
                 .stream()
                 .map(this::getUserById)
                 .collect(Collectors.toSet());
@@ -162,9 +162,9 @@ public final class UserService {
     public Collection<User> getCommonFriends(final long userId, final long otherId) {
         User user = getUserById(userId);
         User other = getUserById(otherId);
-        Collection<User> commonFriends = user.getFriends()
+        Collection<User> commonFriends = user.getFriends().keySet()
                 .stream()
-                .filter(id -> other.getFriends().contains(id))
+                .filter(id -> other.getFriends().containsKey(id))
                 .map(this::getUserById)
                 .collect(Collectors.toSet());
         log.debug(

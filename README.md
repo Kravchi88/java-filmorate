@@ -1,2 +1,4 @@
 # java-filmorate
-Template repository for Filmorate project.
+
+## The database scheme
+![My Image](images/db-scheme.png)

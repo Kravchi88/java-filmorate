@@ -1,5 +1,8 @@
+# Исключение классов и логов
 *.class
 *.log
+
+# Исключение архивов
 *.jar
 *.war
 *.nar
@@ -7,14 +10,23 @@
 *.zip
 *.tar.gz
 *.rar
+
+# Java файлы ошибок
 hs_err_pid*
+
+# Build-папки и временные файлы
 out/
 target/
+build/
+
+# Исключение mvn wrapper (оставляем, если нужно)
 !.mvn/wrapper/maven-wrapper.jar
+
+# Удаление всех папок target кроме src/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
+# STS (Spring Tool Suite)
 .apt_generated
 .classpath
 .factorypath
@@ -23,24 +35,29 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
+# IntelliJ IDEA
 .idea
 *.iws
 *.iml
 *.ipr
 
-### NetBeans ###
+# NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
+# VS Code
 .vscode/
 
+# Базы данных
 *.db
-db/*
+db/
+
+# Исключение специфических файлов, которые есть в репозитории
+checkstyle.xml
+lombok.config
+suppressions.xml
+.github/
+images/
