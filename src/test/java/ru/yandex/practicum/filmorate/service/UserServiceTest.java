@@ -2,10 +2,11 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.dal.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -14,12 +15,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class UserServiceTest {
     private UserService userService;
-    private UserStorage userStorage;
 
     @BeforeEach
     void setUp() {
-        userStorage = new InMemoryUserStorage();
-        userService = new UserService(userStorage);
+        userService = new UserService(new InMemoryUserStorage(), new UserMapper());
     }
 
     @Test
@@ -30,7 +29,7 @@ class UserServiceTest {
         user.setName("Test User");
         user.setBirthday(LocalDate.of(2000, 1, 1));
 
-        User addedUser = userService.addUser(user);
+        UserDto addedUser = userService.addUser(user);
         assertEquals(1, addedUser.getId());
         assertEquals("test@example.com", addedUser.getEmail());
         assertEquals(1, userService.getAllUsers().size());
@@ -67,7 +66,7 @@ class UserServiceTest {
         userService.addUser(user2);
 
         userService.addFriend(1, 2);
-        List<User> friends = userService.getFriends(1).stream().toList();
+        List<UserDto> friends = userService.getFriends(1).stream().toList();
 
         assertEquals(1, friends.size());
         assertEquals("User Two", friends.get(0).getName());

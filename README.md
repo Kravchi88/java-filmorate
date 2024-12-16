@@ -1,4 +1,4 @@
 # java-filmorate
 
-## The database scheme
-![My Image](images/db-scheme.png)
+## The database schema
+![My Image](images/db-schema.png)
