@@ -59,3 +59,4 @@ db/
 checkstyle.xml
 lombok.config
 suppressions.xml
+images/
