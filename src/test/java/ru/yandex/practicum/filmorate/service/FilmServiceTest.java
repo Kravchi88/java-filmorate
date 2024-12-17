@@ -2,13 +2,18 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.dal.genre.InMemoryGenreStorage;
+import ru.yandex.practicum.filmorate.dal.mpa.InMemoryMpaStorage;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
+import ru.yandex.practicum.filmorate.mapper.GenreMapper;
+import ru.yandex.practicum.filmorate.mapper.MpaMapper;
+import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.dal.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.dal.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -18,15 +23,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class FilmServiceTest {
     private FilmService filmService;
     private UserService userService;
-    private FilmStorage filmStorage;
-    private UserStorage userStorage;
 
     @BeforeEach
     void setUp() {
-        filmStorage = new InMemoryFilmStorage();
-        userStorage = new InMemoryUserStorage();
-        userService = new UserService(userStorage);
-        filmService = new FilmService(filmStorage, userService);
+        userService = new UserService(new InMemoryUserStorage(), new UserMapper());
+        filmService = new FilmService(
+                new InMemoryFilmStorage(new InMemoryGenreStorage(), new InMemoryMpaStorage()),
+                new FilmMapper(new GenreMapper(), new MpaMapper())
+        );
     }
 
     @Test
@@ -37,7 +41,7 @@ class FilmServiceTest {
         film.setReleaseDate(LocalDate.of(2010, 7, 16));
         film.setDuration(148);
 
-        Film addedFilm = filmService.addFilm(film);
+        FilmDto addedFilm = filmService.addFilm(film);
         assertEquals(1, addedFilm.getId());
         assertEquals("Inception", addedFilm.getName());
         assertEquals(1, filmService.getAllFilms().size());
@@ -104,7 +108,7 @@ class FilmServiceTest {
         userService.addUser(user);
 
         filmService.addLike(2, 1);
-        Collection<Film> topFilms = filmService.getTopFilms(1);
+        Collection<FilmDto> topFilms = filmService.getTopFilms(1);
 
         assertEquals(1, topFilms.size());
         assertEquals("Film Two", topFilms.iterator().next().getName());

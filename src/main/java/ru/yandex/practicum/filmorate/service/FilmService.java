@@ -2,15 +2,17 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.dal.film.FilmStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 /**
  * Service class for managing films and their associated operations.
@@ -30,78 +32,92 @@ public final class FilmService {
     private final FilmStorage storage;
 
     /**
-     * Service for handling user-related business logic.
+     * Mapper for converting {@link Film} to {@link FilmDto}.
      */
-    private final UserService userService;
+    private final FilmMapper filmMapper;
 
     /**
      * Constructor for {@code FilmService}.
      *
-     * @param filmStorage storage for managing films.
-     * @param service service for managing users.
+     * @param filmStorage the storage for managing films.
+     * @param filmMapper  the mapper for converting {@link Film} to {@link FilmDto}.
      */
     @Autowired
-    public FilmService(final FilmStorage filmStorage, final UserService service) {
+    public FilmService(@Qualifier("filmDbStorage") final FilmStorage filmStorage, final FilmMapper filmMapper) {
         this.storage = filmStorage;
-        this.userService = service;
+        this.filmMapper = filmMapper;
     }
 
     /**
-     * Fetches all films.
+     * Fetches all films as DTOs.
      *
-     * @return a collection of all films.
+     * @return a collection of all films as DTOs.
      */
-    public Collection<Film> getAllFilms() {
+    public Collection<FilmDto> getAllFilms() {
         log.debug("Fetching all films");
-        return storage.getAllFilms();
+        return storage.getAllFilms()
+                .stream()
+                .map(filmMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     /**
-     * Fetches a film by its ID.
+     * Fetches the top films based on the number of likes as DTOs.
+     *
+     * @param count the maximum number of films to return.
+     * @return a collection of the top films as DTOs.
+     * @throws ValidationException if the count is less than or equal to 0.
+     */
+    public Collection<FilmDto> getTopFilms(final int count) {
+        if (count <= 0) {
+            throw new ValidationException("Count must be greater than 0");
+        }
+
+        Collection<Film> topFilms = storage.getTopFilms(count);
+        log.debug("Retrieved top {} films", count);
+        return topFilms.stream()
+                .map(filmMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Fetches a film by its ID as a DTO.
      *
      * @param id the ID of the film.
-     * @return the film with the specified ID.
-     * @throws NotFoundException if the film does not exist.
+     * @return the film DTO with the specified ID.
      */
-    public Film getFilmById(final long id) {
-        Film film = storage.getFilmById(id)
-                .orElseThrow(() -> new NotFoundException(
-                        "Film with id = " + id + " doesn't exist"
-                ));
+    public FilmDto getFilmById(final long id) {
+        Film film = storage.getFilmById(id);
         log.debug("Retrieved film with id {}", id);
-        return film;
+        return filmMapper.toDto(film);
     }
 
     /**
-     * Adds a new film.
+     * Adds a new film and returns it as a DTO.
      *
      * @param film the film to add.
-     * @return the added film.
+     * @return the added film as a DTO.
      * @throws ValidationException if the release date is invalid.
      */
-    public Film addFilm(final Film film) {
+    public FilmDto addFilm(final Film film) {
         validateReleaseDate(film);
         Film addedFilm = storage.addFilm(film);
         log.debug("Added new film with id {}", addedFilm.getId());
-        return addedFilm;
+        return filmMapper.toDto(addedFilm);
     }
 
     /**
-     * Updates an existing film.
+     * Updates an existing film and returns it as a DTO.
      *
      * @param film the film with updated information.
-     * @return the updated film.
+     * @return the updated film as a DTO.
      * @throws ValidationException if the release date is invalid.
-     * @throws NotFoundException if the film does not exist.
      */
-    public Film updateFilm(final Film film) {
+    public FilmDto updateFilm(final Film film) {
         validateReleaseDate(film);
-        Film updatedFilm = storage.updateFilm(film)
-                .orElseThrow(() -> new NotFoundException(
-                        "Film with id = " + film.getId() + " doesn't exist"
-                ));
+        Film updatedFilm = storage.updateFilm(film);
         log.debug("Updated film with id {}", film.getId());
-        return updatedFilm;
+        return filmMapper.toDto(updatedFilm);
     }
 
     /**
@@ -121,16 +137,8 @@ public final class FilmService {
      * @param userId the ID of the user liking the film.
      */
     public void addLike(final long filmId, final long userId) {
-        Film film = getFilmById(filmId);
-        User user = userService.getUserById(userId);
-
-        if (!user.getLikedFilms().contains(filmId)) {
-            user.getLikedFilms().add(filmId);
-            film.setLikes(film.getLikes() + 1);
-            log.debug("User with id {} liked film with id {}", userId, filmId);
-        } else {
-            log.debug("User with id {} already liked film with id {}", userId, filmId);
-        }
+        storage.addLike(filmId, userId);
+        log.debug("User with id {} liked film with id {}", userId, filmId);
     }
 
     /**
@@ -140,30 +148,8 @@ public final class FilmService {
      * @param userId the ID of the user removing the like.
      */
     public void removeLike(final long filmId, final long userId) {
-        Film film = getFilmById(filmId);
-        User user = userService.getUserById(userId);
-
-        if (user.getLikedFilms().contains(filmId)) {
-            user.getLikedFilms().remove(filmId);
-            if (film.getLikes() > 0) {
-                film.setLikes(film.getLikes() - 1);
-            }
-            log.debug("User with id {} removed like from film with id {}", userId, filmId);
-        } else {
-            log.debug("User with id {} has not liked film with id {}", userId, filmId);
-        }
-    }
-
-    /**
-     * Fetches the top films based on the number of likes.
-     *
-     * @param count the maximum number of films to return.
-     * @return a collection of the top films.
-     */
-    public Collection<Film> getTopFilms(final int count) {
-        Collection<Film> topFilms = storage.getTopFilms(count);
-        log.debug("Retrieved top {} films", count);
-        return topFilms;
+        storage.removeLike(filmId, userId);
+        log.debug("User with id {} removed like from film with id {}", userId, filmId);
     }
 
     /**

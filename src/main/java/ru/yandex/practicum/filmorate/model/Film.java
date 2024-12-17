@@ -64,11 +64,10 @@ public class Film {
     /**
      * List of genres associated with the film.
      */
-    private Set<String> genres;
+    private Set<Genre> genres;
 
     /**
      * Age rating of the film as defined by the Motion Picture Association (MPA).
      */
-    @NotNull(message = "MPA rating can't be null")
-    private String mpaRating;
+    private Mpa mpa;
 }

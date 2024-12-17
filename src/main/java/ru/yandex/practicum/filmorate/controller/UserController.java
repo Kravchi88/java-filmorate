@@ -3,15 +3,8 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -26,16 +19,8 @@ import java.util.Collection;
 @Slf4j
 public final class UserController {
 
-    /**
-     * Service layer for handling business logic related to users.
-     */
     private final UserService service;
 
-    /**
-     * Constructor for {@code UserController}.
-     *
-     * @param userService the service layer for handling user-related logic.
-     */
     @Autowired
     public UserController(final UserService userService) {
         this.service = userService;
@@ -44,10 +29,10 @@ public final class UserController {
     /**
      * Retrieves all users.
      *
-     * @return a collection of all users.
+     * @return a collection of all users as DTOs.
      */
     @GetMapping
-    public Collection<User> getAllUsers() {
+    public Collection<UserDto> getAllUsers() {
         log.debug("Received GET request for all users");
         return service.getAllUsers();
     }
@@ -56,10 +41,10 @@ public final class UserController {
      * Retrieves a user by their ID.
      *
      * @param id the ID of the user.
-     * @return the user with the specified ID.
+     * @return the user DTO with the specified ID.
      */
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable("id") final long id) {
+    public UserDto getUserById(@PathVariable("id") final long id) {
         log.debug("Received GET request for user with id {}", id);
         return service.getUserById(id);
     }
@@ -68,11 +53,11 @@ public final class UserController {
      * Adds a new user.
      *
      * @param user the user to add.
-     * @return the added user.
+     * @return the added user's DTO.
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public User addUser(@Valid @RequestBody final User user) {
+    public UserDto addUser(@Valid @RequestBody final User user) {
         log.debug("Received POST request to add a user: {}", user.getLogin());
         return service.addUser(user);
     }
@@ -81,10 +66,10 @@ public final class UserController {
      * Updates an existing user.
      *
      * @param user the user with updated information.
-     * @return the updated user.
+     * @return the updated user's DTO.
      */
     @PutMapping
-    public User updateUser(@Valid @RequestBody final User user) {
+    public UserDto updateUser(@Valid @RequestBody final User user) {
         log.debug("Received PUT request to update a user with id: {}", user.getId());
         return service.updateUser(user);
     }
@@ -140,10 +125,10 @@ public final class UserController {
      * Retrieves the friends of a user.
      *
      * @param userId the ID of the user.
-     * @return a collection of the user's friends.
+     * @return a collection of the user's friends as DTOs.
      */
     @GetMapping("/{id}/friends")
-    public Collection<User> getFriends(@PathVariable("id") final long userId) {
+    public Collection<UserDto> getFriends(@PathVariable("id") final long userId) {
         log.debug("Received GET request for friends of user with id {}", userId);
         return service.getFriends(userId);
     }
@@ -153,10 +138,10 @@ public final class UserController {
      *
      * @param userId   the ID of the first user.
      * @param otherId  the ID of the second user.
-     * @return a collection of common friends.
+     * @return a collection of common friends as DTOs.
      */
     @GetMapping("/{id}/friends/common/{otherId}")
-    public Collection<User> getCommonFriends(
+    public Collection<UserDto> getCommonFriends(
             @PathVariable("id") final long userId,
             @PathVariable("otherId") final long otherId
     ) {
