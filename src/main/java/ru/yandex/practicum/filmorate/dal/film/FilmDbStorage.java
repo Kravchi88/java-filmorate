@@ -12,44 +12,19 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of {@link FilmStorage} that interacts with the database using JDBC.
  * Provides methods to manage films, their likes, associated genres, and MPA ratings.
  */
 @Repository("filmDbStorage")
-public class FilmDbStorage implements FilmStorage {
-
-    private static final String SQL_SELECT_ALL_FILMS = "SELECT * FROM films";
-    private static final String SQL_SELECT_TOP_FILMS = """
-            SELECT * FROM films ORDER BY
-            (SELECT COUNT(*) FROM user_film_likes WHERE films.film_id = user_film_likes.film_id) DESC LIMIT ?
-            """;
-    private static final String SQL_SELECT_FILM_BY_ID = "SELECT * FROM films WHERE film_id = ?";
-    private static final String SQL_INSERT_FILM = """
-            INSERT INTO films (film_name, film_description, film_release_date, film_duration, film_mpa_rating_id)
-            VALUES (?, ?, ?, ?, ?)
-            """;
-    private static final String SQL_UPDATE_FILM = """
-            UPDATE films SET film_name = ?, film_description = ?, film_release_date = ?,
-            film_duration = ?, film_mpa_rating_id = ? WHERE film_id = ?
-            """;
-    private static final String SQL_DELETE_FILM = "DELETE FROM films WHERE film_id = ?";
-    private static final String SQL_INSERT_FILM_GENRE = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
-    private static final String SQL_DELETE_FILM_GENRES = "DELETE FROM film_genres WHERE film_id = ?";
-    private static final String SQL_SELECT_GENRES_FOR_FILM = """
-            SELECT g.* FROM genres g JOIN film_genres fg ON g.genre_id = fg.genre_id WHERE fg.film_id = ?
-            """;
-    private static final String SQL_SELECT_MPA_FOR_FILM = """
-            SELECT m.* FROM mpa_ratings m JOIN films f ON m.mpa_rating_id = f.film_mpa_rating_id WHERE f.film_id = ?
-            """;
-    private static final String SQL_SELECT_FILM_LIKES_COUNT = "SELECT COUNT(*) FROM user_film_likes WHERE film_id = ?";
-    private static final String SQL_SELECT_LIKE = "SELECT COUNT(*) FROM user_film_likes WHERE film_id = ? AND user_id = ?";
-    private static final String SQL_INSERT_LIKE = "INSERT INTO user_film_likes (film_id, user_id) VALUES (?, ?)";
-    private static final String SQL_DELETE_LIKE = "DELETE FROM user_film_likes WHERE film_id = ? AND user_id = ?";
+public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
 
     private final JdbcTemplate jdbcTemplate;
     private final RowMapper<Film> filmRowMapper;
@@ -81,9 +56,7 @@ public class FilmDbStorage implements FilmStorage {
      */
     @Override
     public Collection<Film> getAllFilms() {
-        Collection<Film> films = jdbcTemplate.query(SQL_SELECT_ALL_FILMS, filmRowMapper);
-        films.forEach(this::populateFilmDetails);
-        return films;
+        return extractFilms(SQL_SELECT_ALL_FILMS).values();
     }
 
     /**
@@ -94,10 +67,37 @@ public class FilmDbStorage implements FilmStorage {
      */
     @Override
     public Collection<Film> getTopFilms(int count) {
-        Collection<Film> films = jdbcTemplate.query(SQL_SELECT_TOP_FILMS, filmRowMapper, count);
-        films.forEach(this::populateFilmDetails);
-        return films;
+        Map<Long, Film> filmMap = new LinkedHashMap<>();
+
+        jdbcTemplate.query(SQL_SELECT_TOP_FILMS, rs -> {
+            mapFilmBase(rs, filmMap);
+        }, count);
+
+        String genreSql = """
+        SELECT fg.film_id, g.genre_id, g.genre_name
+        FROM film_genres fg
+        JOIN genres g ON fg.genre_id = g.genre_id
+        WHERE fg.film_id IN (%s)
+        """;
+
+        String filmIds = filmMap.keySet().stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(", "));
+
+        if (!filmIds.isEmpty()) {
+            jdbcTemplate.query(String.format(genreSql, filmIds), rs -> {
+                long filmId = rs.getLong("film_id");
+                Genre genre = genreRowMapper.mapRow(rs, rs.getRow());
+
+                if (filmMap.containsKey(filmId)) {
+                    filmMap.get(filmId).getGenres().add(genre);
+                }
+            });
+        }
+
+        return filmMap.values();
     }
+
 
     /**
      * Retrieves a film by its ID.
@@ -108,11 +108,11 @@ public class FilmDbStorage implements FilmStorage {
      */
     @Override
     public Film getFilmById(long id) {
-        return jdbcTemplate.query(SQL_SELECT_FILM_BY_ID, filmRowMapper, id)
-                .stream()
-                .findFirst()
-                .map(this::populateFilmDetails)
-                .orElseThrow(() -> new NotFoundException("Film with id = " + id + " doesn't exist"));
+        Map<Long, Film> filmMap = extractFilms(SQL_SELECT_FILM_BY_ID, id);
+        if (filmMap.isEmpty()) {
+            throw new NotFoundException("Film with id = " + id + " doesn't exist");
+        }
+        return filmMap.get(id);
     }
 
     /**
@@ -146,7 +146,7 @@ public class FilmDbStorage implements FilmStorage {
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             updateFilmGenres(film);
         }
-        return populateFilmDetails(film);
+        return getFilmById(film.getId());
     }
 
     /**
@@ -180,7 +180,7 @@ public class FilmDbStorage implements FilmStorage {
             if (film.getGenres() != null && !film.getGenres().isEmpty()) {
                 updateFilmGenres(film);
             }
-            return populateFilmDetails(film);
+            return getFilmById(film.getId());
         } else {
             throw new NotFoundException("Film with id = " + film.getId() + " doesn't exist");
         }
@@ -228,16 +228,62 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     /**
-     * Populates additional details (MPA and genres) for a given {@link Film}.
+     * Extracts a map of films from the database query result. Each film is identified by its unique ID.
+     * This method processes basic film data (such as ID, name, description, MPA rating, likes)
+     * and adds genres if they are present in the result set.
      *
-     * @param film the {@link Film} to populate.
-     * @return the updated {@link Film}.
+     * @param sql    the SQL query string to execute.
+     * @param params the parameters to pass into the query.
+     * @return a {@link Map} where the key is the film ID and the value is the corresponding {@link Film} object.
      */
-    private Film populateFilmDetails(Film film) {
-        film.setMpa(getMpaForFilm(film.getId()));
-        film.setGenres(getGenresForFilm(film.getId()));
-        film.setLikes(getLikesForFilm(film.getId()));
-        return film;
+    private Map<Long, Film> extractFilms(String sql, Object... params) {
+        Map<Long, Film> filmMap = new HashMap<>();
+
+        jdbcTemplate.query(sql, rs -> {
+            Film film = mapFilmBase(rs, filmMap);
+
+            int genreId = rs.getInt("genre_id");
+            if (genreId > 0) {
+                Genre genre = genreRowMapper.mapRow(rs, rs.getRow());
+                film.getGenres().add(genre);
+            }
+        }, params);
+
+        return filmMap;
+    }
+
+    /**
+     * Maps the basic data of a film from a result set. This includes film ID, name, description,
+     * release date, duration, likes count, and MPA rating. If a film with the same ID already exists
+     * in the given map, it is reused.
+     *
+     * @param rs       the {@link ResultSet} containing the query results.
+     * @param filmMap  the {@link Map} where films are stored and deduplicated by their IDs.
+     * @return a {@link Film} object containing the mapped basic data.
+     * @throws SQLException if an SQL exception occurs during data extraction.
+     */
+    private Film mapFilmBase(ResultSet rs, Map<Long, Film> filmMap) throws SQLException {
+        long filmId = rs.getLong("film_id");
+
+        return filmMap.computeIfAbsent(filmId, id -> {
+            try {
+                Film film = filmRowMapper.mapRow(rs, rs.getRow());
+                assert film != null;
+
+                film.setLikes(rs.getInt("likes_count"));
+
+                int mpaId = rs.getInt("mpa_rating_id");
+                if (mpaId > 0) {
+                    Mpa mpa = mpaRowMapper.mapRow(rs, rs.getRow());
+                    film.setMpa(mpa);
+                }
+
+                film.setGenres(new HashSet<>());
+                return film;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     /**
@@ -250,41 +296,6 @@ public class FilmDbStorage implements FilmStorage {
         film.getGenres().forEach(genre ->
                 jdbcTemplate.update(SQL_INSERT_FILM_GENRE, film.getId(), genre.getId())
         );
-    }
-
-    /**
-     * Retrieves the MPA rating for a given {@link Film}.
-     *
-     * @param filmId the ID of the {@link Film}.
-     * @return the {@link Mpa} associated with the film, or {@code null} if not found.
-     */
-    private Mpa getMpaForFilm(long filmId) {
-        return jdbcTemplate.query(SQL_SELECT_MPA_FOR_FILM, mpaRowMapper, filmId)
-                .stream()
-                .findFirst()
-                .orElse(null);
-    }
-
-    /**
-     * Retrieves the genres for a given {@link Film}.
-     *
-     * @param filmId the ID of the {@link Film}.
-     * @return a {@link Set} of {@link Genre} associated with the film.
-     */
-    private Set<Genre> getGenresForFilm(long filmId) {
-        return new HashSet<>(jdbcTemplate.query(SQL_SELECT_GENRES_FOR_FILM, genreRowMapper, filmId));
-    }
-
-    /**
-     * Retrieves the number of likes for a given {@link Film}.
-     *
-     * @param filmId the ID of the {@link Film}.
-     * @return the number of likes.
-     */
-    private int getLikesForFilm(long filmId) {
-        return Optional.ofNullable(
-                jdbcTemplate.queryForObject(SQL_SELECT_FILM_LIKES_COUNT, Integer.class, filmId)
-        ).orElse(0);
     }
 
     /**

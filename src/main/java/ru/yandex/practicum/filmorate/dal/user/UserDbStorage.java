@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -18,42 +19,7 @@ import java.util.stream.Collectors;
  * Provides CRUD operations and friendship management for {@link User} entities.
  */
 @Repository("userDbStorage")
-public class UserDbStorage implements UserStorage {
-
-    private static final String SELECT_ALL_USERS = "SELECT * FROM users";
-    private static final String SELECT_USER_BY_ID = "SELECT * FROM users WHERE user_id = ?";
-    private static final String INSERT_USER = "INSERT INTO users (user_email, user_login, user_name, user_birthday) VALUES (?, ?, ?, ?)";
-    private static final String UPDATE_USER = "UPDATE users SET user_email = ?, user_login = ?, user_name = ?, user_birthday = ? WHERE user_id = ?";
-    private static final String DELETE_USER = "DELETE FROM users WHERE user_id = ?";
-    private static final String SELECT_USER_COUNT_BY_ID = "SELECT COUNT(*) FROM users WHERE user_id = ?";
-    private static final String SELECT_USER_LIKED_FILMS = "SELECT film_id FROM user_film_likes WHERE user_id = ?";
-    private static final String SELECT_USER_FRIENDSHIPS = """
-        SELECT requester_id, recipient_id, is_confirmed
-        FROM user_friendships
-        WHERE (requester_id = ? AND recipient_id = ?)
-           OR (requester_id = ? AND recipient_id = ?)
-        """;
-    private static final String INSERT_USER_FRIENDSHIP = """
-        INSERT INTO user_friendships (requester_id, recipient_id, is_confirmed)
-        VALUES (?, ?, ?)
-        """;
-    private static final String UPDATE_USER_FRIENDSHIP = """
-        UPDATE user_friendships
-        SET is_confirmed = true
-        WHERE requester_id = ? AND recipient_id = ?
-        """;
-    private static final String DELETE_USER_FRIENDSHIP = """
-        DELETE FROM user_friendships
-        WHERE (requester_id = ? AND recipient_id = ?)
-           OR (requester_id = ? AND recipient_id = ?)
-        """;
-    private static final String SELECT_USER_FRIENDS = """
-        SELECT u.*
-        FROM users u
-        JOIN user_friendships uf
-          ON (u.user_id = uf.recipient_id AND uf.requester_id = ?)
-           OR (u.user_id = uf.requester_id AND uf.recipient_id = ? AND uf.is_confirmed = true)
-        """;
+public class UserDbStorage implements UserStorage, UserSqlConstants {
 
     private final JdbcTemplate jdbcTemplate;
     private final RowMapper<User> userRowMapper;
@@ -76,9 +42,7 @@ public class UserDbStorage implements UserStorage {
      */
     @Override
     public Collection<User> getAllUsers() {
-        Collection<User> users = jdbcTemplate.query(SELECT_ALL_USERS, userRowMapper);
-        users.forEach(this::populateUserDetails);
-        return users;
+        return extractUsers(SELECT_ALL_USERS).values();
     }
 
     /**
@@ -90,11 +54,13 @@ public class UserDbStorage implements UserStorage {
      */
     @Override
     public User getUserById(long id) {
-        return jdbcTemplate.query(SELECT_USER_BY_ID, userRowMapper, id)
-                .stream()
-                .findFirst()
-                .map(this::populateUserDetails)
-                .orElseThrow(() -> new NotFoundException("User with id = " + id + " doesn't exist"));
+        Map<Long, User> userMap = extractUsers(SELECT_USER_BY_ID, id);
+
+        if (userMap.isEmpty()) {
+            throw new NotFoundException("User with id = " + id + " doesn't exist");
+        }
+
+        return userMap.get(id);
     }
 
     /**
@@ -116,10 +82,9 @@ public class UserDbStorage implements UserStorage {
             return ps;
         }, keyHolder);
 
-        long generatedId = Objects.requireNonNull(keyHolder.getKey()).longValue();
-        user.setId(generatedId);
+        user.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
 
-        return populateUserDetails(user);
+        return getUserById(user.getId());
     }
 
     /**
@@ -144,7 +109,7 @@ public class UserDbStorage implements UserStorage {
             throw new NotFoundException("User with id = " + user.getId() + " doesn't exist");
         }
 
-        return populateUserDetails(user);
+        return getUserById(user.getId());
     }
 
     /**
@@ -249,6 +214,102 @@ public class UserDbStorage implements UserStorage {
     }
 
     /**
+     * Extracts user data from the database based on the provided SQL query and parameters.
+     * This method retrieves basic user information, enriches it with their friends and liked films,
+     * and maps all users into a `Map<Long, User>` where the key is the user ID.
+     *
+     * @param sql    the SQL query string to execute.
+     * @param params the parameters to include in the SQL query (e.g., user IDs, conditions).
+     * @return a {@link Map} where the key is the user ID and the value is the {@link User} object
+     *         enriched with their friends and liked films.
+     * @throws RuntimeException if there is an issue while mapping user data.
+     */
+    private Map<Long, User> extractUsers(String sql, Object... params) {
+        Map<Long, User> userMap = new HashMap<>();
+
+        jdbcTemplate.query(sql, rs -> {
+            long userId = rs.getLong("user_id");
+
+            userMap.computeIfAbsent(userId, id -> {
+                User user;
+                try {
+                    user = userRowMapper.mapRow(rs, rs.getRow());
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+                assert user != null;
+                user.setFriends(new HashSet<>());
+                user.setLikedFilms(new HashSet<>());
+                return user;
+            });
+        }, params);
+
+        enrichUserFriends(userMap);
+        enrichUserLikes(userMap);
+
+        return userMap;
+    }
+
+    /**
+     * Enriches the provided users with their friends' IDs.
+     * This method retrieves friendship information for all users in the map and updates each user's
+     * `friends` set based on their friendships in the database.
+     *
+     * @param userMap a {@link Map} of users to enrich with their friends' IDs.
+     */
+    private void enrichUserFriends(Map<Long, User> userMap) {
+        if (userMap.isEmpty()) return;
+
+        String sql = """
+        SELECT uf.requester_id, uf.recipient_id, uf.is_confirmed
+        FROM user_friendships uf
+        WHERE uf.requester_id IN (%s) OR uf.recipient_id IN (%s)
+        """.formatted(
+                userMap.keySet().stream().map(String::valueOf).collect(Collectors.joining(", ")),
+                userMap.keySet().stream().map(String::valueOf).collect(Collectors.joining(", "))
+        );
+
+        jdbcTemplate.query(sql, rs -> {
+            long requesterId = rs.getLong("requester_id");
+            long recipientId = rs.getLong("recipient_id");
+            boolean isConfirmed = rs.getBoolean("is_confirmed");
+
+            if (userMap.containsKey(requesterId)) {
+                userMap.get(requesterId).getFriends().add(recipientId);
+            }
+            if (isConfirmed && userMap.containsKey(recipientId)) {
+                userMap.get(recipientId).getFriends().add(requesterId);
+            }
+        });
+    }
+
+    /**
+     * Enriches the provided users with the IDs of films they liked.
+     * This method retrieves film likes for all users in the map and updates each user's
+     * `likedFilms` set based on their likes in the database.
+     *
+     * @param userMap a {@link Map} of users to enrich with their liked films' IDs.
+     */
+    private void enrichUserLikes(Map<Long, User> userMap) {
+        if (userMap.isEmpty()) return;
+
+        String sql = """
+        SELECT user_id, film_id
+        FROM user_film_likes
+        WHERE user_id IN (%s)
+        """.formatted(
+                userMap.keySet().stream().map(String::valueOf).collect(Collectors.joining(", "))
+        );
+
+        jdbcTemplate.query(sql, rs -> {
+            long userId = rs.getLong("user_id");
+            long filmId = rs.getLong("film_id");
+
+            userMap.get(userId).getLikedFilms().add(filmId);
+        });
+    }
+
+    /**
      * Validates if a user exists by their ID.
      *
      * @param userId the ID of the user.
@@ -259,27 +320,5 @@ public class UserDbStorage implements UserStorage {
         if (count == null || count == 0) {
             throw new NotFoundException("User with ID " + userId + " does not exist.");
         }
-    }
-
-    /**
-     * Enriches a {@link User} with their friends and liked films.
-     *
-     * @param user the {@link User} to populate.
-     * @return the enriched {@link User}.
-     */
-    private User populateUserDetails(User user) {
-        getFriends(user.getId()).forEach(friend -> user.getFriends().add(friend.getId()));
-        getUserLikedFilms(user.getId()).forEach(user.getLikedFilms()::add);
-        return user;
-    }
-
-    /**
-     * Retrieves a set of film IDs liked by a user.
-     *
-     * @param userId the ID of the user.
-     * @return a {@link Set} of film IDs.
-     */
-    private Set<Long> getUserLikedFilms(long userId) {
-        return new HashSet<>(jdbcTemplate.queryForList(SELECT_USER_LIKED_FILMS, Long.class, userId));
     }
 }
