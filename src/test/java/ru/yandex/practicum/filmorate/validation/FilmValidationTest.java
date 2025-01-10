@@ -23,7 +23,7 @@ class FilmValidationTest {
         validator = factory.getValidator();
     }
 
-    @Test
+ @Test
     void shouldPassValidationForValidFilm() {
         Film film = new Film();
         film.setName("Valid Film");
@@ -35,6 +35,7 @@ class FilmValidationTest {
 
         assertTrue(violations.isEmpty(), "Film should pass validation");
     }
+
 
     @Test
     void shouldFailValidationWhenNameIsBlank() {

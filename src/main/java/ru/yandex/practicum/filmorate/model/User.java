@@ -9,9 +9,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -61,11 +59,11 @@ public class User {
      * Map of friends with friendship statuses.
      * Key: ID of the friend. Value: Friendship status (true for confirmed, false for unconfirmed).
      */
-    private final Map<Long, Boolean> friends = new HashMap<>();
+    private Set<Long> friends = new HashSet<>();
 
     /**
      * Set of IDs representing films the user has liked.
      * This is a mutable set used to track the user's liked films.
      */
-    private final Set<Long> likedFilms = new HashSet<>();
+    private Set<Long> likedFilms = new HashSet<>();
 }
