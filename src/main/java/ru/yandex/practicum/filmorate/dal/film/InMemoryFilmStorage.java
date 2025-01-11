@@ -216,4 +216,9 @@ public class InMemoryFilmStorage implements FilmStorage {
             }
         }
     }
+
+    // Заглушка
+    public Collection<Film> getTopFilms(int count, Integer genreId, Integer year) {
+        return null;
+    }
 }

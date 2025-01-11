@@ -71,4 +71,14 @@ public interface FilmStorage {
      * @param userId the ID of the user unliking the film.
      */
     void removeLike(long filmId, long userId);
+
+    /**
+     * Retrieves the top films filtered by genre and year.
+     *
+     * @param count   the maximum number of films to retrieve.
+     * @param genreId the ID of the genre to filter by (optional).
+     * @param year    the year to filter by (optional).
+     * @return a collection of the top films.
+     */
+    Collection<Film> getTopFilms(int count, Integer genreId, Integer year);
 }
