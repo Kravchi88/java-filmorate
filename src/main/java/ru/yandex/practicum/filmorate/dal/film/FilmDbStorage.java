@@ -351,6 +351,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
             filmMap.get(rs.getLong("film_id")).setLikes(rs.getInt("likes_count")); // Устанавливаем количество лайков
         });
 
+        //Хотел добавить 404, но тесты в GitHub не пропускают, ждут 200, даже если пусто
         /*// Если фильмы не найдены, бросаем исключение
         if (filmMap.isEmpty()) {
             throw new NotFoundException("No films found for the given criteria.");
