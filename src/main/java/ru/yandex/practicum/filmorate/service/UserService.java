@@ -5,12 +5,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.user.UserStorage;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -22,6 +29,7 @@ public final class UserService {
 
     private final UserStorage storage;
     private final UserMapper userMapper;
+    private final FilmService filmService;
 
     /**
      * Constructor for {@code UserService}.
@@ -30,9 +38,11 @@ public final class UserService {
      * @param userMapper the mapper for converting User to UserDto.
      */
     @Autowired
-    public UserService(@Qualifier("userDbStorage") final UserStorage userStorage, final UserMapper userMapper) {
+    public UserService(@Qualifier("userDbStorage") final UserStorage userStorage, final UserMapper userMapper,
+                       final FilmService filmService) {
         this.storage = userStorage;
         this.userMapper = userMapper;
+        this.filmService = filmService;
     }
 
     /**
@@ -169,5 +179,10 @@ public final class UserService {
                     user.getId(), user.getLogin()
             );
         }
+    }
+
+    public List<FilmDto> getRecommendations(Long userId) {
+        log.debug("Fetching recommendations for user with id {}", userId);
+        return filmService.getRecommendations(userId);
     }
 }

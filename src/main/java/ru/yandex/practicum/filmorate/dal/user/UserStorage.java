@@ -3,6 +3,8 @@ package ru.yandex.practicum.filmorate.dal.user;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Interface for managing user storage operations.

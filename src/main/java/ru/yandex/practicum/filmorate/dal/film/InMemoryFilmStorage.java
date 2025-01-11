@@ -216,4 +216,10 @@ public class InMemoryFilmStorage implements FilmStorage {
             }
         }
     }
+
+    // Заглушка
+    @Override
+    public Map<Long, Set<Long>> getAllUserLikes() {
+        return null;
+    }
 }

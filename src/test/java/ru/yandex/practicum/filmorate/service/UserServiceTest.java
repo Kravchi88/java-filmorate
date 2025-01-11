@@ -2,8 +2,14 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.dal.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.dal.genre.InMemoryGenreStorage;
+import ru.yandex.practicum.filmorate.dal.mpa.InMemoryMpaStorage;
 import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
+import ru.yandex.practicum.filmorate.mapper.GenreMapper;
+import ru.yandex.practicum.filmorate.mapper.MpaMapper;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.dal.user.InMemoryUserStorage;
@@ -17,8 +23,13 @@ class UserServiceTest {
     private UserService userService;
 
     @BeforeEach
+
     void setUp() {
-        userService = new UserService(new InMemoryUserStorage(), new UserMapper());
+        FilmService filmService = new FilmService(
+                new InMemoryFilmStorage(new InMemoryGenreStorage(), new InMemoryMpaStorage()),
+                new FilmMapper(new GenreMapper(), new MpaMapper())
+        );
+        userService = new UserService(new InMemoryUserStorage(), new UserMapper(), filmService);
     }
 
     @Test
