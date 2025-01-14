@@ -23,7 +23,7 @@ public interface ReviewSqlConstants {
 
     String GET_REVIEW_BY_ID_FROM_REVIEWS =
             """
-                    SELECT r.*,sum(CASE WHEN rl.status = TRUE THEN 1 WHEN rl.status = FALSE THEN -1 ELSE 0 end) status_calc
+                    SELECT r.*,sum(CASE WHEN rl.status = TRUE THEN 1 WHEN rl.status = FALSE THEN -1 ELSE 0 end) status
                     FROM reviews r
                     LEFT JOIN review_likes rl ON r.id = rl.review_id
                     WHERE r.id = ?
@@ -44,11 +44,11 @@ public interface ReviewSqlConstants {
 
     String GET_ALL_TOP_RATED_REVIEWS =
             """
-                    SELECT r.*,sum(CASE WHEN rl.status = TRUE THEN 1 WHEN rl.status = FALSE THEN -1 ELSE 0 end) status_calc
+                    SELECT r.*,sum(CASE WHEN rl.status = TRUE THEN 1 WHEN rl.status = FALSE THEN -1 ELSE 0 end) status
                     FROM reviews r
                     LEFT JOIN review_likes rl ON r.id = rl.review_id
                     GROUP BY r.id
-                    ORDER BY status_calc
+                    ORDER BY status
                     LIMIT ?
                     """;
 
