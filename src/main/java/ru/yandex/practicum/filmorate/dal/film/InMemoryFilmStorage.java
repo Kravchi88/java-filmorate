@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.dal.film;
 
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dal.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.dal.mpa.MpaStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -18,7 +17,6 @@ import java.util.stream.Collectors;
  * This class is used for managing films and their relationships with genres and MPA ratings
  * without relying on a database.
  */
-@Component("inMemoryFilmStorage")
 public class InMemoryFilmStorage implements FilmStorage {
 
     private final GenreStorage genreStorage;

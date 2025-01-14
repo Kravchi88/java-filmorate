@@ -48,7 +48,7 @@ public interface ReviewSqlConstants {
                     FROM reviews r
                     LEFT JOIN review_likes rl ON r.id = rl.review_id
                     GROUP BY r.id
-                    ORDER BY status
+                    ORDER BY status DESC
                     LIMIT ?
                     """;
 

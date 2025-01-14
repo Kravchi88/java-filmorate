@@ -27,7 +27,7 @@ public class ReviewDbStorage implements ReviewStorage, ReviewSqlConstants {
             PreparedStatement ps = connection.prepareStatement(INSERT_REVIEW_TO_REVIEWS,
                     Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, review.getContent());
-            ps.setBoolean(2, review.isPositive());
+            ps.setBoolean(2, review.getIsPositive());
             ps.setLong(3, review.getUserId() != null ? review.getUserId().longValue() : null);
             ps.setLong(4, review.getFilmId());
             return ps;
@@ -42,7 +42,7 @@ public class ReviewDbStorage implements ReviewStorage, ReviewSqlConstants {
     public ReviewDto updateReview(Review review) {
         Long id = review.getReviewId();
 
-        int updatedStatus = jdbcTemplate.update(UPDATE_REVIEW_IN_REVIEWS, review.getContent(), review.isPositive(), id);
+        int updatedStatus = jdbcTemplate.update(UPDATE_REVIEW_IN_REVIEWS, review.getContent(), review.getIsPositive(), id);
 
         if (updatedStatus == 1) {
             return getReviewById(id);

@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dal.film.FilmStorage;
 import ru.yandex.practicum.filmorate.dal.review.ReviewStorage;
 import ru.yandex.practicum.filmorate.dal.user.UserStorage;
 import ru.yandex.practicum.filmorate.dto.ReviewDto;
@@ -18,8 +19,11 @@ public class ReviewService {
 
     private final ReviewStorage reviewStorage;
     private final UserStorage userStorage;
+    private final FilmStorage filmStorage;
 
-    public ReviewDto addReview(Review review) { // TODO ReviewDto
+    public ReviewDto addReview(Review review) {
+        userStorage.getUserById(review.getUserId());
+        filmStorage.getFilmById(review.getFilmId());
         return reviewStorage.addReview(review);
     }
 
