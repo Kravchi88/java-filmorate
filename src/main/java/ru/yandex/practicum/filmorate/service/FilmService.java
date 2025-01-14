@@ -153,6 +153,23 @@ public final class FilmService {
     }
 
     /**
+     * Fetches all films of a director, sorted by likes or release year.
+     *
+     * @param directorId the ID of the director.
+     * @param sortBy     the sorting criterion (either "year" or "likes").
+     * @return a collection of the director's films as DTOs, sorted by the specified criterion.
+     */
+    public Collection<FilmDto> getDirectorFilms(final long directorId, final String sortBy) {
+        Collection<Film> directorFilms = storage.getFilmsByDirector(directorId, sortBy);
+
+        log.debug("Retrieved films of director {} sorted by {}", directorId, sortBy);
+
+        return directorFilms.stream()
+                .map(filmMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Validates the release date of a film.
      *
      * @param film the film to validate.

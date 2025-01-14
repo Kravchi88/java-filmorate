@@ -20,6 +20,7 @@ public class FilmMapper {
 
     private final GenreMapper genreMapper;
     private final MpaMapper mpaMapper;
+    private final DirectorMapper directorMapper;
 
     /**
      * Constructs a new {@link FilmMapper} instance.
@@ -27,9 +28,10 @@ public class FilmMapper {
      * @param genreMapper the {@link GenreMapper} for converting genres.
      * @param mpaMapper   the {@link MpaMapper} for converting MPA ratings.
      */
-    public FilmMapper(GenreMapper genreMapper, MpaMapper mpaMapper) {
+    public FilmMapper(GenreMapper genreMapper, MpaMapper mpaMapper, DirectorMapper directorMapper) {
         this.genreMapper = genreMapper;
         this.mpaMapper = mpaMapper;
+        this.directorMapper = directorMapper;
     }
 
     /**
@@ -48,6 +50,7 @@ public class FilmMapper {
         filmDto.setLikes(film.getLikes());
         filmDto.setMpa(mpaMapper.toDto(film.getMpa()));
         filmDto.setGenres(toSortedGenreDtoList(film.getGenres()));
+        filmDto.setDirector(directorMapper.toDto(film.getDirector()));
         return filmDto;
     }
 

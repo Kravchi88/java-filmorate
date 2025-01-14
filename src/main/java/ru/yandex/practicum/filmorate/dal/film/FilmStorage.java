@@ -71,4 +71,6 @@ public interface FilmStorage {
      * @param userId the ID of the user unliking the film.
      */
     void removeLike(long filmId, long userId);
+
+    Collection<Film> getFilmsByDirector(long directorId, String sortBy);
 }

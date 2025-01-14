@@ -70,4 +70,6 @@ public class Film {
      * Age rating of the film as defined by the Motion Picture Association (MPA).
      */
     private Mpa mpa;
+
+    private Director director;
 }
