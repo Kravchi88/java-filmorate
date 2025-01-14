@@ -72,7 +72,8 @@ public class ReviewDbStorage implements ReviewStorage, ReviewSqlConstants {
     @Override
     public Collection<ReviewDto> getReviewsByIds(Optional<Long> filmId, Integer count) {
         if (filmId.isPresent()) {
-            return jdbcTemplate.query(GET_ALL_TOP_RATED_REVIEWS_FOR_THE_FILM, reviewRowMapper, filmId, count);
+            Long filmIdFromOpt = filmId.get();
+            return jdbcTemplate.query(GET_ALL_TOP_RATED_REVIEWS_FOR_THE_FILM, reviewRowMapper, filmIdFromOpt, count);
         } else {
             return jdbcTemplate.query(GET_ALL_TOP_RATED_REVIEWS, reviewRowMapper, count);
         }

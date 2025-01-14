@@ -54,7 +54,7 @@ public interface ReviewSqlConstants {
 
     String GET_ALL_TOP_RATED_REVIEWS_FOR_THE_FILM =
             """
-                    SELECT r.*,sum(CASE WHEN rl.status = TRUE THEN 1 WHEN rl.status = FALSE THEN -1 ELSE 0 end) status
+                    SELECT r.*, sum(CASE WHEN rl.status = TRUE THEN 1 WHEN rl.status = FALSE THEN -1 ELSE 0 end) status
                     FROM reviews r
                     LEFT JOIN review_likes rl ON r.id = rl.review_id
                     WHERE r.film_id = ?
