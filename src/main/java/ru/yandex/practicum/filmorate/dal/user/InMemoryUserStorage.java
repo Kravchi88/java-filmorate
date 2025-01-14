@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
  * Provides CRUD operations and friendship management for {@link User} entities.
  * This implementation does not persist data beyond the application runtime.
  */
-@Component
 public final class InMemoryUserStorage implements UserStorage {
 
     /**
