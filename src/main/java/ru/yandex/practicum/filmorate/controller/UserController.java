@@ -152,3 +152,4 @@ public final class UserController {
         return service.getCommonFriends(userId, otherId);
     }
 }
+
