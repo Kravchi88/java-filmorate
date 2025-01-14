@@ -16,7 +16,7 @@ public class ReviewRowMapper implements RowMapper<ReviewDto> {
                 .id(rs.getLong("id"))
                 .content(rs.getString("content"))
                 .isPositive(rs.getBoolean("is_positive"))
-                .useful(rs.getInt("status_calc"))
+                .useful(rs.getInt("status"))
                 .userId(rs.getLong("user_id"))
                 .filmId(rs.getLong("film_id"))
                 .build();
