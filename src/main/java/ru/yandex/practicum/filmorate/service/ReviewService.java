@@ -27,7 +27,7 @@ public class ReviewService {
         return reviewStorage.updateReview(review);
     }
 
-    public void deleteReview(Long id) {
+    public void deleteReview(long id) {
         reviewStorage.deleteReview(id);
     }
 

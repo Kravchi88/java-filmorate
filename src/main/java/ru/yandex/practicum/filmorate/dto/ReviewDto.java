@@ -7,7 +7,7 @@ import lombok.Data;
 @Builder
 public class ReviewDto {
 
-    private Long id;
+    private Long reviewId;
     private String content;
     private boolean isPositive;
     private Long userId;

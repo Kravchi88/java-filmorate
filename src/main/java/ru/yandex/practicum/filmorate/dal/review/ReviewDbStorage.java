@@ -40,7 +40,7 @@ public class ReviewDbStorage implements ReviewStorage, ReviewSqlConstants {
 
     @Override
     public ReviewDto updateReview(Review review) {
-        Long id = review.getId();
+        Long id = review.getReviewId();
 
         int updatedStatus = jdbcTemplate.update(UPDATE_REVIEW_IN_REVIEWS, review.getContent(), review.isPositive(), id);
 
