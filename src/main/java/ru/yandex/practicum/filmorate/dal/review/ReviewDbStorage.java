@@ -81,6 +81,12 @@ public class ReviewDbStorage implements ReviewStorage, ReviewSqlConstants {
 
     @Override
     public ReviewDto addLike(Long id, Long userId) {
+
+        try {
+            removeDislikeForReview(id, userId);
+        } catch (NotFoundException ignored) {
+        }
+
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(INSERT_MARK_TO_REVIEW_LIKES,
                     Statement.RETURN_GENERATED_KEYS);
@@ -95,6 +101,12 @@ public class ReviewDbStorage implements ReviewStorage, ReviewSqlConstants {
 
     @Override
     public ReviewDto addDislike(Long id, Long userId) {
+
+        try {
+            removeLikeForReview(id, userId);
+        } catch (NotFoundException ignored) {
+        }
+
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(INSERT_MARK_TO_REVIEW_LIKES,
                     Statement.RETURN_GENERATED_KEYS);
