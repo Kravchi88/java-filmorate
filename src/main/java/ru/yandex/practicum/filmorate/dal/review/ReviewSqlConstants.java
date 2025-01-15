@@ -36,10 +36,16 @@ public interface ReviewSqlConstants {
                     VALUES (?, ?, ?)
                     """;
 
-    String DELETE_RATING_FOR_REVIEW_FROM_REVIEW_LIKES =
+    String DELETE_LIKE_REVIEW_LIKES =
             """
                     DELETE FROM review_likes
-                    WHERE review_id = ? AND user_id =?
+                    WHERE review_id = ? AND user_id =? AND status = TRUE
+                    """;
+
+    String DELETE_DISLIKE_FROM_REVIEW_LIKES =
+            """
+                    DELETE FROM review_likes
+                    WHERE review_id = ? AND user_id =? AND status = FALSE
                     """;
 
     String GET_ALL_TOP_RATED_REVIEWS =

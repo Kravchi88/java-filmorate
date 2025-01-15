@@ -37,7 +37,7 @@ public class ReviewController {
     }
 
     @GetMapping("/{id}")
-    public ReviewDto getReviewById(@PathVariable Long id) {
+    public ReviewDto getReviewById(@PathVariable long id) {
         return reviewService.getReviewById(id);
     }
 
@@ -48,22 +48,22 @@ public class ReviewController {
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public ReviewDto addLike(@PathVariable Long id, @PathVariable Long userId) {
+    public ReviewDto addLike(@PathVariable long id, @PathVariable long userId) {
         return reviewService.addLike(id, userId);
     }
 
     @PutMapping("/{id}/dislike/{userId}")
-    public ReviewDto addDislike(@PathVariable Long id, @PathVariable Long userId) {
+    public ReviewDto addDislike(@PathVariable long id, @PathVariable long userId) {
         return reviewService.addDislike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public ReviewDto removeLike(@PathVariable Long id, @PathVariable Long userId) {
-        return reviewService.removeRatingForReview(id, userId);
+    public ReviewDto removeLike(@PathVariable long id, @PathVariable long userId) {
+        return reviewService.removeLikeForReview(id, userId);
     }
 
     @DeleteMapping("/{id}/dislike/{userId}")
-    public ReviewDto removeDislike(@PathVariable Long id, @PathVariable Long userId) {
-        return reviewService.removeRatingForReview(id, userId);
+    public ReviewDto removeDislike(@PathVariable long id, @PathVariable long userId) {
+        return reviewService.removeDislikeForReview(id, userId);
     }
 }

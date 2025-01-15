@@ -108,8 +108,19 @@ public class ReviewDbStorage implements ReviewStorage, ReviewSqlConstants {
     }
 
     @Override
-    public ReviewDto removeRatingForReview(Long id, Long userId) {
-        int updatedStatus = jdbcTemplate.update(DELETE_RATING_FOR_REVIEW_FROM_REVIEW_LIKES, id, userId);
+    public ReviewDto removeLikeForReview(Long id, Long userId) {
+        int updatedStatus = jdbcTemplate.update(DELETE_LIKE_REVIEW_LIKES, id, userId);
+
+        if (updatedStatus == 0) {
+            throw new NotFoundException("There's no review you want to update!");
+        }
+
+        return getReviewById(id);
+    }
+
+    @Override
+    public ReviewDto removeDislikeForReview(Long id, Long userId) {
+        int updatedStatus = jdbcTemplate.update(DELETE_DISLIKE_FROM_REVIEW_LIKES, id, userId);
 
         if (updatedStatus == 0) {
             throw new NotFoundException("There's no review you want to update!");

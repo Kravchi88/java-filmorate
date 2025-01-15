@@ -22,5 +22,7 @@ public interface ReviewStorage {
 
     ReviewDto addDislike(Long id, Long userId);
 
-    ReviewDto removeRatingForReview(Long id, Long userId);
+    ReviewDto removeLikeForReview(Long id, Long userId);
+
+    ReviewDto removeDislikeForReview(Long id, Long userId);
 }

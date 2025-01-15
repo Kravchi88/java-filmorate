@@ -31,7 +31,7 @@ public class ReviewService {
         return reviewStorage.updateReview(review);
     }
 
-    public void deleteReview(long id) {
+    public void deleteReview(Long id) {
         reviewStorage.deleteReview(id);
     }
 
@@ -60,7 +60,17 @@ public class ReviewService {
         return reviewStorage.addDislike(id, userId);
     }
 
-    public ReviewDto removeRatingForReview(Long id, Long userId) {
-        return reviewStorage.removeRatingForReview(id, userId);
+    public ReviewDto removeLikeForReview(Long id, Long userId) {
+        reviewStorage.getReviewById(id);
+        userStorage.getUserById(userId);
+
+        return reviewStorage.removeLikeForReview(id, userId);
+    }
+
+    public ReviewDto removeDislikeForReview(Long id, Long userId) {
+        reviewStorage.getReviewById(id);
+        userStorage.getUserById(userId);
+
+        return reviewStorage.removeDislikeForReview(id, userId);
     }
 }
