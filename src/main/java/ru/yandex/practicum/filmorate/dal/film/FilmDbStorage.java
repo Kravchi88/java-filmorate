@@ -128,17 +128,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
      */
     @Override
     public Film addFilm(Film film) {
-        if (film.getMpa() != null) {
-            validateEntityExists(film.getMpa().getId(), "MPA", "mpa_ratings", "mpa_rating_id");
-        }
-        if (film.getGenres() != null) {
-            film.getGenres().forEach(genre ->
-                    validateEntityExists(genre.getId(), "Genre", "genres", "genre_id"));
-        }
-        if (film.getDirector() != null) {
-            validateEntityExists(film.getDirector().getId(), "Director", "directors", "director_id");
-        }
-
+        filmAttributesValidation(film);
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(SQL_INSERT_FILM, Statement.RETURN_GENERATED_KEYS);
@@ -147,7 +137,11 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
             ps.setDate(3, Date.valueOf(film.getReleaseDate()));
             ps.setObject(4, film.getDuration() != 0 ? film.getDuration() : null, Types.INTEGER);
             ps.setObject(5, film.getMpa() != null ? film.getMpa().getId() : null, Types.INTEGER);
-            ps.setObject(6, film.getDirector() != null ? film.getDirector().getId() : null, Types.INTEGER);
+            ps.setObject(6, film.getDirectors()
+                    .stream()
+                    .findFirst()
+                    .map(Director::getId)
+                    .orElse(null), Types.INTEGER);
             return ps;
         }, keyHolder);
 
@@ -168,24 +162,14 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
      */
     @Override
     public Film updateFilm(Film film) {
-        if (film.getMpa() != null) {
-            validateEntityExists(film.getMpa().getId(), "MPA", "mpa_ratings", "mpa_rating_id");
-        }
-        if (film.getGenres() != null) {
-            film.getGenres().forEach(genre ->
-                    validateEntityExists(genre.getId(), "Genre", "genres", "genre_id"));
-        }
-        if (film.getDirector() != null) {
-            validateEntityExists(film.getDirector().getId(), "Director", "directors", "director_id");
-        }
-
+        filmAttributesValidation(film);
         int updatedRows = jdbcTemplate.update(SQL_UPDATE_FILM,
                 film.getName(),
                 film.getDescription(),
                 Date.valueOf(film.getReleaseDate()),
                 film.getDuration() != 0 ? film.getDuration() : null,
                 film.getMpa() != null ? film.getMpa().getId() : null,
-                film.getDirector() != null ? film.getDirector().getId() : null,
+                film.getDirectors().stream().findFirst().map(Director::getId).orElse(null),
                 film.getId()
         );
 
@@ -314,7 +298,8 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
                 int directorId = rs.getInt("director_id");
                 if (directorId > 0) {
                     Director director = directorRowMapper.mapRow(rs, rs.getRow());
-                    film.setDirector(director);
+                    film.setDirectors(new HashSet<>());
+                    film.getDirectors().add(director);
                 }
 
                 film.setGenres(new HashSet<>());
@@ -335,6 +320,20 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         film.getGenres().forEach(genre ->
                 jdbcTemplate.update(SQL_INSERT_FILM_GENRE, film.getId(), genre.getId())
         );
+    }
+
+    private void filmAttributesValidation(Film film) {
+        if (film.getMpa() != null) {
+            validateEntityExists(film.getMpa().getId(), "MPA", "mpa_ratings", "mpa_rating_id");
+        }
+        if (film.getGenres() != null) {
+            film.getGenres().forEach(genre ->
+                    validateEntityExists(genre.getId(), "Genre", "genres", "genre_id"));
+        }
+        if (film.getDirectors() != null) {
+            film.getDirectors().forEach(director ->
+                    validateEntityExists(director.getId(), "Director", "directors", "director_id"));
+        }
     }
 
     /**

@@ -51,5 +51,5 @@ public class FilmDto {
      * A list of genre names associated with the film.
      */
     private List<GenreDto> genres;
-    private DirectorDto director;
+    private List<DirectorDto> directors;
 }

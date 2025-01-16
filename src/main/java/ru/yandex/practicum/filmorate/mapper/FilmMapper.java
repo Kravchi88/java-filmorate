@@ -1,8 +1,10 @@
 package ru.yandex.practicum.filmorate.mapper;
 
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.dto.DirectorDto;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.GenreDto;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
@@ -50,7 +52,7 @@ public class FilmMapper {
         filmDto.setLikes(film.getLikes());
         filmDto.setMpa(mpaMapper.toDto(film.getMpa()));
         filmDto.setGenres(toSortedGenreDtoList(film.getGenres()));
-        filmDto.setDirector(directorMapper.toDto(film.getDirector()));
+        filmDto.setDirectors(toSortedDirectorDtoList(film.getDirectors()));
         return filmDto;
     }
 
@@ -69,6 +71,17 @@ public class FilmMapper {
         return genres.stream()
                 .map(genreMapper::toDto)
                 .sorted(Comparator.comparingInt(GenreDto::getId))
+                .collect(Collectors.toList());
+    }
+
+    private List<DirectorDto> toSortedDirectorDtoList(Set<Director> directors) {
+        if (directors == null || directors.isEmpty()) {
+            return List.of();
+        }
+
+        return directors.stream()
+                .map(directorMapper::toDto)
+                .sorted(Comparator.comparingInt(DirectorDto::getId))
                 .collect(Collectors.toList());
     }
 }
