@@ -53,4 +53,17 @@ public interface FilmSqlConstants {
     String SQL_SELECT_LIKE = "SELECT COUNT(*) FROM user_film_likes WHERE film_id = ? AND user_id = ?";
     String SQL_INSERT_LIKE = "INSERT INTO user_film_likes (film_id, user_id) VALUES (?, ?)";
     String SQL_DELETE_LIKE = "DELETE FROM user_film_likes WHERE film_id = ? AND user_id = ?";
+    String SQL_SEARCH_FILMS = """
+    SELECT f.film_id, f.film_name, f.film_description, f.film_release_date,
+           f.film_duration, m.mpa_rating_id, m.mpa_rating_name,
+           COUNT(DISTINCT ufl.user_id) AS likes_count, d.director_name
+    FROM films f
+    LEFT JOIN mpa_ratings m ON f.film_mpa_rating_id = m.mpa_rating_id
+    LEFT JOIN film_directors fd ON f.film_id = fd.film_id
+    LEFT JOIN directors d ON fd.director_id = d.director_id
+    LEFT JOIN user_film_likes ufl ON f.film_id = ufl.film_id
+    WHERE LOWER(f.film_name) LIKE LOWER(?) OR LOWER(d.director_name) LIKE LOWER(?)
+    GROUP BY f.film_id, m.mpa_rating_id, m.mpa_rating_name, d.director_name
+    ORDER BY f.film_name ASC;
+    """;
 }

@@ -227,6 +227,57 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         jdbcTemplate.update(SQL_DELETE_LIKE, filmId, userId);
     }
 
+    /*@Override
+    public Collection<Film> searchFilms(String query, String by) {
+        boolean searchByTitle = false;
+        boolean searchByDirector = false;
+
+        if (by != null) {
+            String[] searchBy = by.split(",");
+            searchByTitle = Arrays.asList(searchBy).contains("title");
+            searchByDirector = Arrays.asList(searchBy).contains("director");
+        }
+
+        StringBuilder sqlBuilder = new StringBuilder("SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, COUNT(l.user_id) AS likes_count, g.genre_id, g.genre_name FROM films f ");
+        sqlBuilder.append("LEFT JOIN film_likes l ON f.film_id = l.film_id ");
+        sqlBuilder.append("LEFT JOIN film_genres fg ON f.film_id = fg.film_id ");
+        sqlBuilder.append("LEFT JOIN genres g ON fg.genre_id = g.genre_id ");
+
+        List<Object> params = new ArrayList<>();
+        if (searchByTitle) {
+            sqlBuilder.append("WHERE f.name LIKE ? ");
+            params.add("%" + query + "%");
+        }
+
+        if (searchByDirector) {
+            if (searchByTitle) {
+                sqlBuilder.append("AND ");
+            } else {
+                sqlBuilder.append("WHERE ");
+            }
+            sqlBuilder.append("f.director LIKE ? ");
+            params.add("%" + query + "%");
+        }
+
+        sqlBuilder.append("GROUP BY f.film_id, g.genre_id");
+
+        Map<Long, Film> filmMap = new HashMap<>();
+        jdbcTemplate.query(sqlBuilder.toString(), rs -> {
+            Film film = mapFilmBase(rs, filmMap);
+
+            int genreId = rs.getInt("genre_id");
+            if (genreId > 0) {
+                Genre genre = genreRowMapper.mapRow(rs, rs.getRow());
+                film.getGenres().add(genre);
+            }
+        }, params.toArray());
+
+        return filmMap.values().stream()
+                .sorted((f1, f2) -> Integer.compare(f2.getLikes(), f1.getLikes()))
+                .collect(Collectors.toList());
+    }*/
+
+
     /**
      * Extracts a map of films from the database query result. Each film is identified by its unique ID.
      * This method processes basic film data (such as ID, name, description, MPA rating, likes)
@@ -315,3 +366,4 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         }
     }
 }
+

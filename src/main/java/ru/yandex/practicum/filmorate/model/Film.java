@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.model;
 
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -8,6 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -70,4 +70,17 @@ public class Film {
      * Age rating of the film as defined by the Motion Picture Association (MPA).
      */
     private Mpa mpa;
+
+    /**
+     * List of directors associated with the film.
+     */
+    private Set<String> directors = new HashSet<>();
+
+    public Set<String> getDirectors() {
+        return directors;
+    }
+
+    public void setDirectors(Set<String> directors) {
+        this.directors = directors;
+    }
 }

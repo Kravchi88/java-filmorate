@@ -142,4 +142,20 @@ public final class FilmController {
         );
         service.removeLike(filmId, userId);
     }
+
+    /**
+     * Searches for films based on the provided query and search criteria.
+     *
+     * @param query the text to search for.
+     * @param by    the fields to search by (e.g., "title", "director", or both).
+     * @return a collection of matching films as DTOs.
+     */
+    @GetMapping("/search")
+    public Collection<FilmDto> searchFilms(
+            @RequestParam("query") String query,
+            @RequestParam("by") String by
+    ) {
+        log.debug("Received GET request to search films by '{}' with query '{}'", by, query);
+        return service.searchFilms(query, by);
+    }
 }

@@ -153,6 +153,41 @@ public final class FilmService {
     }
 
     /**
+     * Searches for films based on the query and search criteria.
+     *
+     * @param query the text to search for.
+     * @param by    the fields to search by (e.g., "title", "director", or both).
+     * @return a collection of matching films as DTOs.
+     * @throws ValidationException if the input parameters are invalid.
+     */
+    public Collection<FilmDto> searchFilms(String query, String by) {
+        if (query == null || query.isBlank()) {
+            throw new ValidationException("Search query must not be null or empty");
+        }
+        if (by == null || by.isBlank()) {
+            throw new ValidationException("Search criteria (by) must not be null or empty");
+        }
+
+        query = query.trim().toLowerCase();
+        by = by.trim().toLowerCase();
+
+        boolean searchByTitle = by.contains("title");
+        boolean searchByDirector = by.contains("director");
+
+        if (!searchByTitle && !searchByDirector) {
+            throw new ValidationException("Invalid search criteria: must include 'title', 'director', or both");
+        }
+
+        Collection<Film> films = storage.searchFilms(query, searchByTitle, searchByDirector);
+
+        log.debug("Found {} films matching query '{}' by '{}'", films.size(), query, by);
+
+        return films.stream()
+                .map(filmMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Validates the release date of a film.
      *
      * @param film the film to validate.

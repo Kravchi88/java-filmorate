@@ -71,4 +71,15 @@ public interface FilmStorage {
      * @param userId the ID of the user unliking the film.
      */
     void removeLike(long filmId, long userId);
+
+    /**
+     * Searches for films based on the provided query and filter options.
+     * Can search by title, director, or both.
+     *
+     * @param query the search query string.
+     * @param searchByTitle whether to search by film title.
+     * @param searchByDirector whether to search by director's name.
+     * @return a {@link Collection} of films matching the search criteria.
+     */
+    Collection<Film> searchFilms(String query, boolean searchByTitle, boolean searchByDirector);
 }
