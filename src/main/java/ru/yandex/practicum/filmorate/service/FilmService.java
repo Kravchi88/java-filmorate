@@ -11,7 +11,9 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.dal.film.FilmStorage;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -182,5 +184,36 @@ public final class FilmService {
             );
         }
         log.debug("Validated release date for film: {}", film.getReleaseDate());
+    }
+
+    /**
+     * Searches for films based on a query and search criteria.
+     *
+     * @param query the search query string.
+     * @param by    the criteria to search by (e.g., "title", "director", or both).
+     * @return a collection of films matching the search query as DTOs.
+     * @throws ValidationException if the query is empty or the criteria are invalid.
+     */
+    public Collection<FilmDto> searchFilms(final String query, final String by) {
+        if (query == null || query.isBlank()) {
+            throw new ValidationException("Search query must not be empty");
+        }
+
+        if (by == null || by.isBlank()) {
+            throw new ValidationException("Search criteria 'by' must not be empty");
+        }
+
+        List<String> criteria = Arrays.asList(by.split(","));
+        if (!criteria.contains("title") && !criteria.contains("director")) {
+            throw new ValidationException("Search criteria must include 'title', 'director', or both");
+        }
+
+        log.debug("Searching for films with query '{}' by criteria '{}'", query, criteria);
+
+        Collection<Film> films = storage.searchFilms(query, criteria);
+
+        return films.stream()
+                .map(filmMapper::toDto)
+                .collect(Collectors.toList());
     }
 }

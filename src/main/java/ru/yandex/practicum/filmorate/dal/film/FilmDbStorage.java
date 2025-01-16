@@ -244,6 +244,41 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         return filmMap.values();
     }
 
+    @Override
+    public List<Film> searchFilms(String query, List<String> criteria) {
+        StringBuilder sqlBuilder = new StringBuilder("SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
+                "f.likes_count, f.director_id, fg.genre_id, g.genre_name " +
+                "FROM films f " +
+                "LEFT JOIN film_genres fg ON f.film_id = fg.film_id " +
+                "LEFT JOIN genres g ON fg.genre_id = g.genre_id ");
+
+        List<Object> paramsList = new ArrayList<>();
+        boolean isSearchByDirector = criteria.contains("director");
+        boolean isSearchByTitle = criteria.contains("title");
+
+        if (isSearchByDirector && isSearchByTitle) {
+            sqlBuilder.append("WHERE (f.name LIKE ? OR f.description LIKE ?) " +
+                    "OR (f.director_id IN (SELECT director_id FROM directors WHERE name LIKE ?))");
+            paramsList.add("%" + query + "%");
+            paramsList.add("%" + query + "%");
+            paramsList.add("%" + query + "%");
+        } else if (isSearchByDirector) {
+            sqlBuilder.append("WHERE f.director_id IN (SELECT director_id FROM directors WHERE name LIKE ?)");
+            paramsList.add("%" + query + "%");
+        } else if (isSearchByTitle) {
+            sqlBuilder.append("WHERE f.name LIKE ? OR f.description LIKE ?");
+            paramsList.add("%" + query + "%");
+            paramsList.add("%" + query + "%");
+        }
+
+        sqlBuilder.append(" ORDER BY f.likes_count DESC");
+
+        Map<Long, Film> filmMap = extractFilms(sqlBuilder.toString(), paramsList.toArray());
+
+        return new ArrayList<>(filmMap.values());
+    }
+
+
     /**
      * Extracts a map of films from the database query result. Each film is identified by its unique ID.
      * This method processes basic film data (such as ID, name, description, MPA rating, likes)

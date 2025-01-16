@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.dal.film;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Interface for managing storage operations related to films.
@@ -72,5 +73,21 @@ public interface FilmStorage {
      */
     void removeLike(long filmId, long userId);
 
+    /**
+     * Retrieves films associated with a specific director.
+     *
+     * @param directorId the ID of the director.
+     * @param sortBy     the criteria for sorting (e.g., "likes", "year").
+     * @return a {@link Collection} of films by the director, sorted by the specified criteria.
+     */
     Collection<Film> getFilmsByDirector(long directorId, String sortBy);
+
+    /**
+     * Searches for films based on a query and criteria.
+     *
+     * @param query    the search query string.
+     * @param criteria a list of search criteria (e.g., "title", "director").
+     * @return a {@link List} of films matching the search criteria.
+     */
+    List<Film> searchFilms(String query, List<String> criteria);
 }

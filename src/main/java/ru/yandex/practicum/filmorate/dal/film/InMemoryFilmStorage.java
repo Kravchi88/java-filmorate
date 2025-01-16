@@ -167,6 +167,41 @@ public class InMemoryFilmStorage implements FilmStorage {
         return null;
     }
 
+    @Override
+    public List<Film> searchFilms(String query, List<String> criteria) {
+        String searchQuery = query.toLowerCase();
+
+        Set<Film> result = new HashSet<>();
+
+        if (query == null || query.isEmpty() || criteria == null || criteria.isEmpty()) {
+            return new ArrayList<>(result);
+        }
+
+        if (criteria.contains("title")) {
+            result.addAll(films.values().stream()
+                    .filter(film -> film.getName().toLowerCase().contains(searchQuery))
+                    .collect(Collectors.toList()));
+        }
+
+        if (criteria.contains("description")) {
+            result.addAll(films.values().stream()
+                    .filter(film -> film.getDescription() != null && film.getDescription().toLowerCase().contains(searchQuery))
+                    .collect(Collectors.toList()));
+        }
+
+        if (criteria.contains("director")) {
+            result.addAll(films.values().stream()
+                    .filter(film -> film.getDirectors().stream()
+                            .anyMatch(director -> director.getName().toLowerCase().contains(searchQuery)))
+                    .collect(Collectors.toList()));
+        }
+
+        return new ArrayList<>(result);
+    }
+
+
+
+
     /**
      * Populates a film with its MPA rating and genres.
      *

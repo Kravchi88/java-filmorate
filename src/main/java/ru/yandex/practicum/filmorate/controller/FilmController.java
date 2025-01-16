@@ -162,4 +162,20 @@ public final class FilmController {
         }
         return service.getDirectorFilms(directorId, sortBy);
     }
+
+    /**
+     * Searches for films based on a query and criteria.
+     *
+     * @param query the search query string.
+     * @param by    the criteria to search by (e.g., "title", "director", or both).
+     * @return a collection of films matching the query as DTOs.
+     */
+    @GetMapping("/search")
+    public Collection<FilmDto> searchFilms(
+            @RequestParam("query") final String query,
+            @RequestParam("by") final String by
+    ) {
+        log.debug("Received GET request to search films by '{}' using criteria '{}'", query, by);
+        return service.searchFilms(query, by);
+    }
 }
