@@ -162,6 +162,11 @@ public class InMemoryFilmStorage implements FilmStorage {
         }
     }
 
+    @Override
+    public Collection<Film> getFilmsByDirector(long directorId, String sortBy) {
+        return null;
+    }
+
     /**
      * Populates a film with its MPA rating and genres.
      *

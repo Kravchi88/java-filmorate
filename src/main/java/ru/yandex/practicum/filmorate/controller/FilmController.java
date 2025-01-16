@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -141,5 +142,24 @@ public final class FilmController {
                 userId, filmId
         );
         service.removeLike(filmId, userId);
+    }
+
+    /**
+     * Retrieves all films of a director, sorted by likes or release year.
+     *
+     * @param directorId the ID of the director.
+     * @param sortBy     the sorting criterion (either "year" or "likes").
+     * @return a collection of the director's films as DTOs, sorted by the specified criterion.
+     */
+    @GetMapping("/director/{directorId}")
+    public Collection<FilmDto> getDirectorFilms(
+            @PathVariable("directorId") final long directorId,
+            @RequestParam("sortBy") final String sortBy
+    ) {
+        log.debug("Received GET request for films of director {} sorted by {}", directorId, sortBy);
+        if (!sortBy.equals("year") && !sortBy.equals("likes")) {
+            throw new ValidationException("Invalid sortBy value. Must be 'year' or 'likes'.");
+        }
+        return service.getDirectorFilms(directorId, sortBy);
     }
 }
