@@ -75,6 +75,16 @@ public interface FilmStorage {
     void removeLike(long filmId, long userId);
 
     /**
+     * Retrieves the top films filtered by genre and year.
+     *
+     * @param count   the maximum number of films to retrieve.
+     * @param genreId the ID of the genre to filter by (optional).
+     * @param year    the year to filter by (optional).
+     * @return a collection of the top films.
+     */
+    Collection<Film> getTopFilms(int count, Integer genreId, Integer year);
+
+    /**
      * Retrieves a map of all users and the films they liked.
      *
      * @return a {@link Map} where the key is the user ID and the value is a {@link Set} of film IDs liked by the user.
