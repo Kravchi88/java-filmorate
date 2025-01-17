@@ -51,9 +51,10 @@ public interface FilmSqlConstants {
     // Запрос для фильмов с возможностью добавления фильтров
     String SQL_SELECT_FILMS_WITH_FILTERS = """
         SELECT f.film_id, f.film_name, f.film_description, f.film_release_date,
-               f.film_duration, m.mpa_rating_id, m.mpa_rating_name,
+               f.film_duration, m.mpa_rating_id, m.mpa_rating_name, d.director_id, d.director_name,
                COUNT(DISTINCT ufl.user_id) AS likes_count
         FROM films f
+        LEFT JOIN directors d ON f.film_director_id = d.director_id
         LEFT JOIN mpa_ratings m ON f.film_mpa_rating_id = m.mpa_rating_id
         LEFT JOIN user_film_likes ufl ON f.film_id = ufl.film_id
         LEFT JOIN film_genres fg ON f.film_id = fg.film_id
