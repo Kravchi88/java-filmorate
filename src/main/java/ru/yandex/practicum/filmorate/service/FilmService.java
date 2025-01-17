@@ -68,25 +68,6 @@ public final class FilmService {
     }
 
     /**
-     * Fetches the top films based on the number of likes as DTOs.
-     *
-     * @param count the maximum number of films to return.
-     * @return a collection of the top films as DTOs.
-     * @throws ValidationException if the count is less than or equal to 0.
-     */
-    public Collection<FilmDto> getTopFilms(final int count) {
-        if (count <= 0) {
-            throw new ValidationException("Count must be greater than 0");
-        }
-
-        Collection<Film> topFilms = storage.getTopFilms(count);
-        log.debug("Retrieved top {} films", count);
-        return topFilms.stream()
-                .map(filmMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
-    /**
      * Fetches a film by its ID as a DTO.
      *
      * @param id the ID of the film.
@@ -241,4 +222,44 @@ public final class FilmService {
                 .collect(Collectors.toList());
     }
 
+
+    /**
+     * Fetches the top films based on the number of likes as DTOs.
+     *
+     * @param count the maximum number of films to return.
+     * @return a collection of the top films as DTOs.
+     * @throws ValidationException if the count is less than or equal to 0.
+     */
+    public Collection<FilmDto> getTopFilms(final int count) {
+        if (count <= 0) {
+            throw new ValidationException("Count must be greater than 0");
+        }
+
+        Collection<Film> topFilms = storage.getTopFilms(count);
+        log.debug("Retrieved top {} films", count);
+        return topFilms.stream()
+                .map(filmMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Fetches the most popular films filtered by genre and year as DTOs.
+     *
+     * @param count   the maximum number of films to retrieve.
+     * @param genreId the ID of the genre to filter by (optional).
+     * @param year    the year to filter by (optional).
+     * @return a collection of the top films as DTOs.
+     * @throws ValidationException if the count is less than or equal to 0.
+     */
+    public Collection<FilmDto> getTopFilms(final int count, final Integer genreId, final Integer year) {
+        if (count <= 0) {
+            throw new ValidationException("Count must be greater than 0");
+        }
+
+        Collection<Film> topFilms = storage.getTopFilms(count, genreId, year);
+        log.debug("Retrieved top {} films with genreId={} and year={}", count, genreId, year);
+        return topFilms.stream()
+                .map(filmMapper::toDto)
+                .collect(Collectors.toList());
+    }
 }

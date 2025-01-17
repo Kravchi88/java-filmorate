@@ -223,6 +223,11 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     // Заглушка
+    public Collection<Film> getTopFilms(int count, Integer genreId, Integer year) {
+        return null;
+    }
+
+    // Заглушка
     @Override
     public Map<Long, Set<Long>> getAllUserLikes() {
         return null;

@@ -47,20 +47,6 @@ public final class FilmController {
     }
 
     /**
-     * Retrieves the most popular films as DTOs.
-     *
-     * @param count the maximum number of films to retrieve (default is 10).
-     * @return a collection of the top films as DTOs.
-     */
-    @GetMapping("/popular")
-    public Collection<FilmDto> getTopFilms(
-            @RequestParam(value = "count", defaultValue = "10") final int count
-    ) {
-        log.debug("Received GET request for top {} films", count);
-        return service.getTopFilms(count);
-    }
-
-    /**
      * Retrieves a film by its ID as a DTO.
      *
      * @param id the ID of the film.
@@ -162,4 +148,30 @@ public final class FilmController {
         }
         return service.getDirectorFilms(directorId, sortBy);
     }
+
+    /**
+     * Retrieves the most popular films, optionally filtered by genre and year as DTOs.
+     *
+     * @param count   the maximum number of films to retrieve (default is 10).
+     * @param genreId the ID of the genre to filter by (optional).
+     * @param year    the year to filter by (optional).
+     * @return a collection of the top films as DTOs.
+     */
+    @GetMapping("/popular")
+    public Collection<FilmDto> getTopFilms(
+            @RequestParam(value = "count", defaultValue = "10") final int count,
+            @RequestParam(value = "genreId", required = false) final Integer genreId,
+            @RequestParam(value = "year", required = false) final Integer year
+    ) {
+        log.debug("Received GET request for top {} films with genreId={} and year={}", count, genreId, year);
+
+        // Если не переданы фильтры, вернуть фильмы без фильтрации
+        if (genreId == null && year == null) {
+            return service.getTopFilms(count); // Логика без фильтров
+        }
+
+        // Если переданы фильтры, вернуть фильмы с учётом фильтров
+        return service.getTopFilms(count, genreId, year); // Логика с фильтрами
+    }
+
 }
