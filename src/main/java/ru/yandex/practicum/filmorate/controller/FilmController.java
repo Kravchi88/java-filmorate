@@ -174,4 +174,19 @@ public final class FilmController {
         return service.getTopFilms(count, genreId, year); // Логика с фильтрами
     }
 
+
+    /**
+     * Handles a GET request to retrieve a list of films that are liked by both the user and their friend.
+     *
+     * @param userId    The identifier of the user for whom the common films are requested.
+     * @param friendId  The identifier of the friend with whom the films are compared.
+     * @return A collection of {@link FilmDto} objects representing the films that are liked by both users.
+     */
+    @GetMapping("/common")
+    public Collection<FilmDto> getCommonFilms(
+            @RequestParam("userId") final long userId,
+            @RequestParam("friendId") final long friendId) {
+        log.debug("Received GET request for common films between user with id {} and user with id {}", userId, friendId);
+        return service.getCommonFilms(userId, friendId);
+    }
 }

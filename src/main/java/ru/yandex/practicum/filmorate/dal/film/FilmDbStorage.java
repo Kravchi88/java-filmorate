@@ -313,6 +313,61 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         }
     }
 
+    /**
+     * Retrieves a list of common films liked by two users.
+     *
+     * This method queries the database to find films that are liked by both the user
+     * identified by {@code userId} and the user identified by {@code friendId}.
+     * It constructs a list of {@link Film} objects, each containing details about the film
+     * and its associated genres. The method ensures that duplicate films are not included
+     * in the result by using a map to track films by their unique identifiers.
+     *
+     * @param userId the ID of the first user
+     * @param friendId the ID of the second user (friend)
+     * @return a list of {@link Film} objects that are common between the two users
+     */
+    @Override
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        List<Film> commonFilms = new ArrayList<>();
+        Map<Long, Film> filmMap = new HashMap<>();
+
+        jdbcTemplate.query(SQL_GET_COMMON_FILMS, new Object[]{userId, friendId},
+                (rs) -> {
+                    long filmId = rs.getLong("film_id");
+                    Film film = filmMap.get(filmId);
+                    if (film == null) {
+                        film = new Film();
+                        film.setId(filmId);
+                        film.setName(rs.getString("film_name"));
+                        film.setDescription(rs.getString("film_description"));
+                        film.setReleaseDate(rs.getDate("film_release_date").toLocalDate());
+                        film.setDuration(rs.getInt("film_duration"));
+                        film.setLikes(rs.getInt("likes_count"));
+
+                        Mpa mpa = new Mpa();
+                        String mpaName = rs.getString("mpa_rating_name");
+                        mpa.setId(rs.getInt("film_mpa_rating_id"));
+                        mpa.setName(mpaName);
+                        film.setMpa(mpa);
+                        film.setGenres(new HashSet<>());
+                        filmMap.put(filmId, film);
+                    }
+
+                    String genreName = rs.getString("genre_name");
+                    Integer genreId = rs.getInt("genre_id");
+                    if (genreName != null) {
+                        Genre genre = new Genre();
+                        genre.setId(genreId);
+                        genre.setName(genreName);
+                        film.getGenres().add(genre);
+                    }
+                });
+
+        commonFilms.addAll(filmMap.values());
+
+        return commonFilms;
+    }
+
 
     @Override
     public Map<Long, Set<Long>> getAllUserLikes() {

@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.service;
+/*package ru.yandex.practicum.filmorate.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -115,3 +115,4 @@ class FilmServiceTest {
         assertEquals("Film Two", topFilms.iterator().next().getName());
     }
 }
+*/

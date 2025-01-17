@@ -92,4 +92,7 @@ public interface FilmStorage {
     Map<Long, Set<Long>> getAllUserLikes();
 
     Collection<Film> getFilmsByDirector(long directorId, String sortBy);
+
+
+    Collection<Film> getCommonFilms(long userId, long friendId);
 }
