@@ -27,11 +27,11 @@ class FilmServiceTest {
 
     @BeforeEach
     void setUp() {
-        userService = new UserService(new InMemoryUserStorage(), new UserMapper());
         filmService = new FilmService(
                 new InMemoryFilmStorage(new InMemoryGenreStorage(), new InMemoryMpaStorage()),
                 new FilmMapper(new GenreMapper(), new MpaMapper(), new DirectorMapper())
         );
+        userService = new UserService(new InMemoryUserStorage(), new UserMapper(), filmService);
     }
 
     @Test

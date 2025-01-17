@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.service;
 
-import com.fasterxml.jackson.annotation.JsonView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -11,10 +10,14 @@ import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.dal.film.FilmStorage;
 
-import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -60,12 +63,6 @@ public final class FilmService {
         log.debug("Fetching all films");
         return storage.getAllFilms()
                 .stream()
-                .map(filmMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
-    public Collection<FilmDto> getCommonFilms(long userId, long friendId) {
-        return storage.getCommonFilms(userId, friendId).stream()
                 .map(filmMapper::toDto)
                 .collect(Collectors.toList());
     }
@@ -192,4 +189,56 @@ public final class FilmService {
         }
         log.debug("Validated release date for film: {}", film.getReleaseDate());
     }
+
+    public List<FilmDto> getRecommendations(Long userId) {
+        Map<Long, Set<Long>> userLikes = storage.getAllUserLikes();
+
+        Set<Long> likedByUser = userLikes.getOrDefault(userId, Collections.emptySet());
+        Map<Long, Integer> similarityScores = new HashMap<>();
+
+        // Calculate similarity scores
+        for (Map.Entry<Long, Set<Long>> entry : userLikes.entrySet()) {
+            if (!entry.getKey().equals(userId)) {
+                Set<Long> commonLikes = new HashSet<>(likedByUser);
+                commonLikes.retainAll(entry.getValue());
+                similarityScores.put(entry.getKey(), commonLikes.size());
+            }
+        }
+
+        // Remove users with zero similarity scores
+        similarityScores.entrySet().removeIf(entry -> entry.getValue() == 0);
+
+        // Check if there are any similar users
+        if (similarityScores.isEmpty()) {
+            log.debug("No similar users found for userId {}", userId);
+            return List.of();
+        }
+
+        // Find the most similar user
+        Long mostSimilarUserId = similarityScores.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(null);
+
+        if (mostSimilarUserId == null) {
+            log.debug("No most similar user found for userId {}", userId);
+            return List.of();
+        }
+
+        // Get recommendations
+        Set<Long> recommendations = new HashSet<>(userLikes.get(mostSimilarUserId));
+        recommendations.removeAll(likedByUser);
+
+        if (recommendations.isEmpty()) {
+            log.debug("No recommendations found for userId {}", userId);
+            return List.of();
+        }
+
+        log.debug("Found recommendations for userId {}: {}", userId, recommendations);
+        return recommendations.stream()
+                .map(storage::getFilmById)
+                .map(filmMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
 }

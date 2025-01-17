@@ -11,8 +11,12 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
-import java.sql.*;
 import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -75,11 +79,11 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         }, count);
 
         String genreSql = """
-                SELECT fg.film_id, g.genre_id, g.genre_name
-                FROM film_genres fg
-                JOIN genres g ON fg.genre_id = g.genre_id
-                WHERE fg.film_id IN (%s)
-                """;
+        SELECT fg.film_id, g.genre_id, g.genre_name
+        FROM film_genres fg
+        JOIN genres g ON fg.genre_id = g.genre_id
+        WHERE fg.film_id IN (%s)
+        """;
 
         String filmIds = filmMap.keySet().stream()
                 .map(String::valueOf)
@@ -153,7 +157,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
      *
      * @param film the {@link Film} with updated details.
      * @return the updated {@link Film}.
-     * @throws NotFoundException   if the film does not exist.
+     * @throws NotFoundException if the film does not exist.
      * @throws ValidationException if the MPA rating or genres are invalid.
      */
     @Override
@@ -270,8 +274,8 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
      * release date, duration, likes count, and MPA rating. If a film with the same ID already exists
      * in the given map, it is reused.
      *
-     * @param rs      the {@link ResultSet} containing the query results.
-     * @param filmMap the {@link Map} where films are stored and deduplicated by their IDs.
+     * @param rs       the {@link ResultSet} containing the query results.
+     * @param filmMap  the {@link Map} where films are stored and deduplicated by their IDs.
      * @return a {@link Film} object containing the mapped basic data.
      * @throws SQLException if an SQL exception occurs during data extraction.
      */
@@ -402,5 +406,24 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         commonFilms.addAll(filmMap.values());
 
         return commonFilms;
+    }
+
+
+    @Override
+    public Map<Long, Set<Long>> getAllUserLikes() {
+        String sql = """
+            SELECT user_id, film_id
+            FROM user_film_likes
+        """;
+
+        Map<Long, Set<Long>> userLikes = new HashMap<>();
+
+        jdbcTemplate.query(sql, rs -> {
+            Long userId = rs.getLong("user_id");
+            Long filmId = rs.getLong("film_id");
+            userLikes.computeIfAbsent(userId, k -> new HashSet<>()).add(filmId);
+        });
+
+        return userLikes;
     }
 }
