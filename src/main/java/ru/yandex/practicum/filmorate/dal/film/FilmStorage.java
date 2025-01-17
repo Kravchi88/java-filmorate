@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.dal.film;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Interface for managing storage operations related to films.
@@ -71,4 +72,7 @@ public interface FilmStorage {
      * @param userId the ID of the user unliking the film.
      */
     void removeLike(long filmId, long userId);
+
+
+    Collection<Film> getCommonFilms(long userId, long friendId);
 }

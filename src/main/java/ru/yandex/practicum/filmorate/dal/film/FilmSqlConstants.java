@@ -2,43 +2,43 @@ package ru.yandex.practicum.filmorate.dal.film;
 
 public interface FilmSqlConstants {
     String SQL_SELECT_ALL_FILMS = """
-    SELECT f.film_id, f.film_name, f.film_description, f.film_release_date,
-           f.film_duration, m.mpa_rating_id, m.mpa_rating_name,
-           g.genre_id, g.genre_name,
-           COUNT(ufl.user_id) AS likes_count
-    FROM films f
-    LEFT JOIN mpa_ratings m ON f.film_mpa_rating_id = m.mpa_rating_id
-    LEFT JOIN film_genres fg ON f.film_id = fg.film_id
-    LEFT JOIN genres g ON fg.genre_id = g.genre_id
-    LEFT JOIN user_film_likes ufl ON f.film_id = ufl.film_id
-    GROUP BY f.film_id, m.mpa_rating_id, m.mpa_rating_name, g.genre_id, g.genre_name
-        """;
+            SELECT f.film_id, f.film_name, f.film_description, f.film_release_date,
+                   f.film_duration, m.mpa_rating_id, m.mpa_rating_name,
+                   g.genre_id, g.genre_name,
+                   COUNT(ufl.user_id) AS likes_count
+            FROM films f
+            LEFT JOIN mpa_ratings m ON f.film_mpa_rating_id = m.mpa_rating_id
+            LEFT JOIN film_genres fg ON f.film_id = fg.film_id
+            LEFT JOIN genres g ON fg.genre_id = g.genre_id
+            LEFT JOIN user_film_likes ufl ON f.film_id = ufl.film_id
+            GROUP BY f.film_id, m.mpa_rating_id, m.mpa_rating_name, g.genre_id, g.genre_name
+            """;
     String SQL_SELECT_TOP_FILMS = """
-    SELECT f.film_id, f.film_name, f.film_description, f.film_release_date,
-           f.film_duration, m.mpa_rating_id, m.mpa_rating_name,
-           COUNT(DISTINCT ufl.user_id) AS likes_count
-    FROM films f
-    LEFT JOIN mpa_ratings m ON f.film_mpa_rating_id = m.mpa_rating_id
-    LEFT JOIN user_film_likes ufl ON f.film_id = ufl.film_id
-    GROUP BY f.film_id, f.film_name, f.film_description, f.film_release_date,
-             f.film_duration, m.mpa_rating_id, m.mpa_rating_name
-    ORDER BY likes_count DESC
-    LIMIT ?
-        """;
+            SELECT f.film_id, f.film_name, f.film_description, f.film_release_date,
+                   f.film_duration, m.mpa_rating_id, m.mpa_rating_name,
+                   COUNT(DISTINCT ufl.user_id) AS likes_count
+            FROM films f
+            LEFT JOIN mpa_ratings m ON f.film_mpa_rating_id = m.mpa_rating_id
+            LEFT JOIN user_film_likes ufl ON f.film_id = ufl.film_id
+            GROUP BY f.film_id, f.film_name, f.film_description, f.film_release_date,
+                     f.film_duration, m.mpa_rating_id, m.mpa_rating_name
+            ORDER BY likes_count DESC
+            LIMIT ?
+            """;
     String SQL_SELECT_FILM_BY_ID = """
-        SELECT f.film_id, f.film_name, f.film_description, f.film_release_date,
-               f.film_duration, m.mpa_rating_id, m.mpa_rating_name,
-               g.genre_id, g.genre_name,
-               COUNT(DISTINCT ufl.user_id) AS likes_count
-        FROM films f
-        LEFT JOIN mpa_ratings m ON f.film_mpa_rating_id = m.mpa_rating_id
-        LEFT JOIN film_genres fg ON f.film_id = fg.film_id
-        LEFT JOIN genres g ON fg.genre_id = g.genre_id
-        LEFT JOIN user_film_likes ufl ON f.film_id = ufl.film_id
-        WHERE f.film_id = ?
-        GROUP BY f.film_id, f.film_name, f.film_description, f.film_release_date,
-                 f.film_duration, m.mpa_rating_id, m.mpa_rating_name, g.genre_id, g.genre_name
-        """;
+            SELECT f.film_id, f.film_name, f.film_description, f.film_release_date,
+                   f.film_duration, m.mpa_rating_id, m.mpa_rating_name,
+                   g.genre_id, g.genre_name,
+                   COUNT(DISTINCT ufl.user_id) AS likes_count
+            FROM films f
+            LEFT JOIN mpa_ratings m ON f.film_mpa_rating_id = m.mpa_rating_id
+            LEFT JOIN film_genres fg ON f.film_id = fg.film_id
+            LEFT JOIN genres g ON fg.genre_id = g.genre_id
+            LEFT JOIN user_film_likes ufl ON f.film_id = ufl.film_id
+            WHERE f.film_id = ?
+            GROUP BY f.film_id, f.film_name, f.film_description, f.film_release_date,
+                     f.film_duration, m.mpa_rating_id, m.mpa_rating_name, g.genre_id, g.genre_name
+            """;
     String SQL_INSERT_FILM = """
             INSERT INTO films (film_name, film_description, film_release_date, film_duration, film_mpa_rating_id)
             VALUES (?, ?, ?, ?, ?)
@@ -53,4 +53,19 @@ public interface FilmSqlConstants {
     String SQL_SELECT_LIKE = "SELECT COUNT(*) FROM user_film_likes WHERE film_id = ? AND user_id = ?";
     String SQL_INSERT_LIKE = "INSERT INTO user_film_likes (film_id, user_id) VALUES (?, ?)";
     String SQL_DELETE_LIKE = "DELETE FROM user_film_likes WHERE film_id = ? AND user_id = ?";
+    String SQL_GET_COMMON_FILMS = """
+            SELECT f.film_id, f.film_name, f.film_description, f.film_release_date, f.film_duration,
+                   f.film_mpa_rating_id, g.genre_id, g.genre_name, m.mpa_rating_name,
+                   COUNT(DISTINCT ufl.user_id) AS likes_count
+            FROM films f
+            JOIN user_film_likes u1 ON f.film_id = u1.film_id
+            JOIN user_film_likes u2 ON f.film_id = u2.film_id
+            LEFT JOIN film_genres fg ON f.film_id = fg.film_id
+            LEFT JOIN genres g ON fg.genre_id = g.genre_id
+            LEFT JOIN mpa_ratings m ON f.film_mpa_rating_id = m.mpa_rating_id
+            LEFT JOIN user_film_likes ufl ON f.film_id = ufl.film_id
+            WHERE u1.user_id = ? AND u2.user_id = ?
+            GROUP BY f.film_id, f.film_name, f.film_description, f.film_release_date, f.film_duration, f.film_mpa_rating_id, g.genre_id, g.genre_name, m.mpa_rating_name;
+            """;
+
 }

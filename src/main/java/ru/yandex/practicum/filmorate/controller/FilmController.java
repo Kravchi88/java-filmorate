@@ -1,15 +1,19 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import jakarta.validation.Valid;
+
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Controller class for managing films and their related operations.
@@ -141,5 +145,20 @@ public final class FilmController {
                 userId, filmId
         );
         service.removeLike(filmId, userId);
+    }
+
+    /**
+     * Handles a GET request to retrieve a list of films that are liked by both the user and their friend.
+     *
+     * @param userId    The identifier of the user for whom the common films are requested.
+     * @param friendId  The identifier of the friend with whom the films are compared.
+     * @return A collection of {@link FilmDto} objects representing the films that are liked by both users.
+     */
+    @GetMapping("/common")
+    public Collection<FilmDto> getCommonFilms(
+            @RequestParam("userId") final long userId,
+            @RequestParam("friendId") final long friendId) {
+        log.debug("Received GET request for common films between user with id {} and user with id {}", userId, friendId);
+        return service.getCommonFilms(userId, friendId);
     }
 }

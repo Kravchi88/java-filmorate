@@ -10,12 +10,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
+import java.sql.*;
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -74,11 +70,11 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         }, count);
 
         String genreSql = """
-        SELECT fg.film_id, g.genre_id, g.genre_name
-        FROM film_genres fg
-        JOIN genres g ON fg.genre_id = g.genre_id
-        WHERE fg.film_id IN (%s)
-        """;
+                SELECT fg.film_id, g.genre_id, g.genre_name
+                FROM film_genres fg
+                JOIN genres g ON fg.genre_id = g.genre_id
+                WHERE fg.film_id IN (%s)
+                """;
 
         String filmIds = filmMap.keySet().stream()
                 .map(String::valueOf)
@@ -154,7 +150,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
      *
      * @param film the {@link Film} with updated details.
      * @return the updated {@link Film}.
-     * @throws NotFoundException if the film does not exist.
+     * @throws NotFoundException   if the film does not exist.
      * @throws ValidationException if the MPA rating or genres are invalid.
      */
     @Override
@@ -257,8 +253,8 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
      * release date, duration, likes count, and MPA rating. If a film with the same ID already exists
      * in the given map, it is reused.
      *
-     * @param rs       the {@link ResultSet} containing the query results.
-     * @param filmMap  the {@link Map} where films are stored and deduplicated by their IDs.
+     * @param rs      the {@link ResultSet} containing the query results.
+     * @param filmMap the {@link Map} where films are stored and deduplicated by their IDs.
      * @return a {@link Film} object containing the mapped basic data.
      * @throws SQLException if an SQL exception occurs during data extraction.
      */
@@ -313,5 +309,60 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         if (count == 0) {
             throw new ValidationException(entity + " with ID " + id + " does not exist.");
         }
+    }
+
+    /**
+     * Retrieves a list of common films liked by two users.
+     *
+     * This method queries the database to find films that are liked by both the user
+     * identified by {@code userId} and the user identified by {@code friendId}.
+     * It constructs a list of {@link Film} objects, each containing details about the film
+     * and its associated genres. The method ensures that duplicate films are not included
+     * in the result by using a map to track films by their unique identifiers.
+     *
+     * @param userId the ID of the first user
+     * @param friendId the ID of the second user (friend)
+     * @return a list of {@link Film} objects that are common between the two users
+     */
+    @Override
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        List<Film> commonFilms = new ArrayList<>();
+        Map<Long, Film> filmMap = new HashMap<>();
+
+        jdbcTemplate.query(SQL_GET_COMMON_FILMS, new Object[]{userId, friendId},
+                (rs) -> {
+                    long filmId = rs.getLong("film_id");
+                    Film film = filmMap.get(filmId);
+                    if (film == null) {
+                        film = new Film();
+                        film.setId(filmId);
+                        film.setName(rs.getString("film_name"));
+                        film.setDescription(rs.getString("film_description"));
+                        film.setReleaseDate(rs.getDate("film_release_date").toLocalDate());
+                        film.setDuration(rs.getInt("film_duration"));
+                        film.setLikes(rs.getInt("likes_count"));
+
+                        Mpa mpa = new Mpa();
+                        String mpaName = rs.getString("mpa_rating_name");
+                        mpa.setId(rs.getInt("film_mpa_rating_id"));
+                        mpa.setName(mpaName);
+                        film.setMpa(mpa);
+                        film.setGenres(new HashSet<>());
+                        filmMap.put(filmId, film);
+                    }
+
+                    String genreName = rs.getString("genre_name");
+                    Integer genreId = rs.getInt("genre_id");
+                    if (genreName != null) {
+                        Genre genre = new Genre();
+                        genre.setId(genreId);
+                        genre.setName(genreName);
+                        film.getGenres().add(genre);
+                    }
+                });
+
+        commonFilms.addAll(filmMap.values());
+
+        return commonFilms;
     }
 }

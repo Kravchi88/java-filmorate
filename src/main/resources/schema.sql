@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS user_film_likes CASCADE;
-DROP TABLE IF EXISTS film_genres CASCADE;
+--DROP TABLE IF EXISTS film_genres CASCADE;
 DROP TABLE IF EXISTS user_friendships CASCADE;
-DROP TABLE IF EXISTS films CASCADE;
+--DROP TABLE IF EXISTS films CASCADE;
 DROP TABLE IF EXISTS genres CASCADE;
 DROP TABLE IF EXISTS mpa_ratings CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS films (
     film_release_date DATE NOT NULL,
     film_duration INT,
     film_mpa_rating_id INT,
+    likes_count INT,
     FOREIGN KEY (film_mpa_rating_id) REFERENCES mpa_ratings(mpa_rating_id) ON DELETE CASCADE
 );
 
