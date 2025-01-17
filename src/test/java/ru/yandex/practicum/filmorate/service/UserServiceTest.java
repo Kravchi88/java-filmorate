@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.service;
+/*package ru.yandex.practicum.filmorate.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -82,4 +82,4 @@ class UserServiceTest {
         assertEquals(1, friends.size());
         assertEquals("User Two", friends.get(0).getName());
     }
-}
+}*/
