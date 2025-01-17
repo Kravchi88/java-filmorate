@@ -80,4 +80,6 @@ public interface FilmStorage {
      * @return a {@link Map} where the key is the user ID and the value is a {@link Set} of film IDs liked by the user.
      */
     Map<Long, Set<Long>> getAllUserLikes();
+
+    Collection<Film> getFilmsByDirector(long directorId, String sortBy);
 }
