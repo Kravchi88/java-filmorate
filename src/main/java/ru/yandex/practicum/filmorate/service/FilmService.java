@@ -240,5 +240,9 @@ public final class FilmService {
                 .map(filmMapper::toDto)
                 .collect(Collectors.toList());
     }
+    public Collection<FilmDto> getCommonFilms(long userId, long friendId){
+        return storage.getCommonFilms(userId, friendId).stream()
+                .map(filmMapper::toDto).collect(Collectors.toList());
+    }
 
 }

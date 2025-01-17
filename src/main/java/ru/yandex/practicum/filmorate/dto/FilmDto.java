@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.dto;
 
-import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Data;
 
 import java.time.LocalDate;
