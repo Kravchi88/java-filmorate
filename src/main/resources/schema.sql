@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS films CASCADE;
 DROP TABLE IF EXISTS genres CASCADE;
 DROP TABLE IF EXISTS mpa_ratings CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
+--DROP TABLE IF EXISTS user_events CASCADE;
 
 CREATE TABLE IF NOT EXISTS genres (
     genre_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -57,4 +58,14 @@ CREATE TABLE IF NOT EXISTS user_friendships (
     PRIMARY KEY (requester_id, recipient_id),
     FOREIGN KEY (requester_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (recipient_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS user_events (
+    event_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    event_type ENUM('LIKE', 'REVIEW', 'FRIEND') NOT NULL,
+    operation ENUM('ADD', 'REMOVE', 'UPDATE') NOT NULL,
+    entity_id BIGINT NOT NULL,
+    timestamp DATE NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );

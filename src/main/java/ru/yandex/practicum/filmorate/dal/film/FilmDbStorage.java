@@ -4,11 +4,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dal.feed.FeedDbStorage;
+import ru.yandex.practicum.filmorate.dal.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.UserEvent;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -16,6 +19,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,6 +34,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
     private final RowMapper<Film> filmRowMapper;
     private final RowMapper<Mpa> mpaRowMapper;
     private final RowMapper<Genre> genreRowMapper;
+    private final FeedDbStorage feedDbStorage;
 
     /**
      * Constructs a new {@code FilmDbStorage}.
@@ -42,11 +47,12 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
     public FilmDbStorage(JdbcTemplate jdbcTemplate,
                          RowMapper<Film> filmRowMapper,
                          RowMapper<Mpa> mpaRowMapper,
-                         RowMapper<Genre> genreRowMapper) {
+                         RowMapper<Genre> genreRowMapper, FeedDbStorage feedDbStorage) {
         this.jdbcTemplate = jdbcTemplate;
         this.filmRowMapper = filmRowMapper;
         this.mpaRowMapper = mpaRowMapper;
         this.genreRowMapper = genreRowMapper;
+        this.feedDbStorage = feedDbStorage;
     }
 
     /**
@@ -213,6 +219,14 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
 
         if (existingLikes == 0) {
             jdbcTemplate.update(SQL_INSERT_LIKE, filmId, userId);
+
+            UserEvent userEvent = new UserEvent();
+            userEvent.setUserId(String.valueOf(userId));
+            userEvent.setEventType("LIKE");
+            userEvent.setOperation("ADD");
+            userEvent.setEntityId(filmId);
+            userEvent.setTimestamp(Instant.now().toEpochMilli());
+            feedDbStorage.addEvent(userEvent);
         }
     }
 
@@ -225,6 +239,14 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
     @Override
     public void removeLike(long filmId, long userId) {
         jdbcTemplate.update(SQL_DELETE_LIKE, filmId, userId);
+
+        UserEvent userEvent = new UserEvent();
+        userEvent.setUserId(String.valueOf(userId));
+        userEvent.setEventType("LIKE");
+        userEvent.setOperation("REMOVE");
+        userEvent.setEntityId(filmId);
+        userEvent.setTimestamp(Instant.now().toEpochMilli());
+        feedDbStorage.addEvent(userEvent);
     }
 
     /**

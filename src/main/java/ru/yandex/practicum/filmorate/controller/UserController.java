@@ -6,9 +6,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.UserEvent;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import jakarta.validation.Valid;
+
 import java.util.Collection;
 
 /**
@@ -136,8 +138,8 @@ public final class UserController {
     /**
      * Retrieves common friends between two users.
      *
-     * @param userId   the ID of the first user.
-     * @param otherId  the ID of the second user.
+     * @param userId  the ID of the first user.
+     * @param otherId the ID of the second user.
      * @return a collection of common friends as DTOs.
      */
     @GetMapping("/{id}/friends/common/{otherId}")
@@ -151,4 +153,12 @@ public final class UserController {
         );
         return service.getCommonFriends(userId, otherId);
     }
+
+    @GetMapping("/{id}/feed")
+    Collection<UserEvent> getUserFeedList(
+            @PathVariable("id") final long userId) {
+        log.debug("Received GET request for user feed for user with id {}", userId);
+        return service.getUserFeed(userId);
+    }
+
 }

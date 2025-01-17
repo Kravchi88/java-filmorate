@@ -1,8 +1,10 @@
 package ru.yandex.practicum.filmorate.dal.user;
 
+import ru.yandex.practicum.filmorate.model.UserEvent;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Interface for managing user storage operations.
@@ -75,9 +77,11 @@ public interface UserStorage {
     /**
      * Retrieves the common friends between two users.
      *
-     * @param userId   the ID of the first user.
-     * @param otherId  the ID of the second user.
+     * @param userId  the ID of the first user.
+     * @param otherId the ID of the second user.
      * @return a collection of users who are friends with both users.
      */
     Collection<User> getCommonFriends(long userId, long otherId);
+
+    List<UserEvent> getUserEvents(long userId);
 }
