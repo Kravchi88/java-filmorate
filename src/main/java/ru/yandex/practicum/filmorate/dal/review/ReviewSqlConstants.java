@@ -1,5 +1,8 @@
 package ru.yandex.practicum.filmorate.dal.review;
 
+/**
+ * Interface for storing SQL queries related to the "reviews" functionality.
+ */
 public interface ReviewSqlConstants {
 
     String INSERT_REVIEW_TO_REVIEWS =
@@ -36,18 +39,6 @@ public interface ReviewSqlConstants {
                     VALUES (?, ?, ?)
                     """;
 
-    String DELETE_LIKE_REVIEW_LIKES =
-            """
-                    DELETE FROM review_likes
-                    WHERE review_id = ? AND user_id =? AND status = TRUE
-                    """;
-
-    String DELETE_DISLIKE_FROM_REVIEW_LIKES =
-            """
-                    DELETE FROM review_likes
-                    WHERE review_id = ? AND user_id =? AND status = FALSE
-                    """;
-
     String GET_ALL_TOP_RATED_REVIEWS =
             """
                     SELECT r.*,sum(CASE WHEN rl.status = TRUE THEN 1 WHEN rl.status = FALSE THEN -1 ELSE 0 end) status
@@ -67,6 +58,12 @@ public interface ReviewSqlConstants {
                     GROUP BY r.id
                     ORDER BY status DESC
                     LIMIT ?
+                    """;
+
+    String DELETE_RATING_FOR_REVIEW_FROM_REVIEW_LIKES =
+            """
+                    DELETE FROM review_likes
+                    WHERE review_id = ? AND user_id =?
                     """;
 }
 
