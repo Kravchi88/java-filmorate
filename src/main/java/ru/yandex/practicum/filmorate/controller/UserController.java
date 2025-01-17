@@ -4,14 +4,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import jakarta.validation.Valid;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Controller class for managing users and their relationships.
@@ -165,4 +163,12 @@ public final class UserController {
         log.debug("Received GET request for recommendations for user with id {}", id);
         return service.getRecommendations(id);
     }
+
+    @GetMapping("/{id}/feed")
+    Collection<UserEvent> getUserFeedList(
+            @PathVariable("id") final long userId) {
+        log.debug("Received GET request for user feed for user with id {}", userId);
+        return service.getUserFeed(userId);
+    }
+
 }
