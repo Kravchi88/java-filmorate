@@ -12,6 +12,12 @@ import ru.yandex.practicum.filmorate.dal.film.FilmStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -134,6 +140,23 @@ public final class FilmService {
     }
 
     /**
+     * Fetches all films of a director, sorted by likes or release year.
+     *
+     * @param directorId the ID of the director.
+     * @param sortBy     the sorting criterion (either "year" or "likes").
+     * @return a collection of the director's films as DTOs, sorted by the specified criterion.
+     */
+    public Collection<FilmDto> getDirectorFilms(final long directorId, final String sortBy) {
+        Collection<Film> directorFilms = storage.getFilmsByDirector(directorId, sortBy);
+
+        log.debug("Retrieved films of director {} sorted by {}", directorId, sortBy);
+
+        return directorFilms.stream()
+                .map(filmMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Validates the release date of a film.
      *
      * @param film the film to validate.
@@ -147,6 +170,58 @@ public final class FilmService {
         }
         log.debug("Validated release date for film: {}", film.getReleaseDate());
     }
+
+    public List<FilmDto> getRecommendations(Long userId) {
+        Map<Long, Set<Long>> userLikes = storage.getAllUserLikes();
+
+        Set<Long> likedByUser = userLikes.getOrDefault(userId, Collections.emptySet());
+        Map<Long, Integer> similarityScores = new HashMap<>();
+
+        // Calculate similarity scores
+        for (Map.Entry<Long, Set<Long>> entry : userLikes.entrySet()) {
+            if (!entry.getKey().equals(userId)) {
+                Set<Long> commonLikes = new HashSet<>(likedByUser);
+                commonLikes.retainAll(entry.getValue());
+                similarityScores.put(entry.getKey(), commonLikes.size());
+            }
+        }
+
+        // Remove users with zero similarity scores
+        similarityScores.entrySet().removeIf(entry -> entry.getValue() == 0);
+
+        // Check if there are any similar users
+        if (similarityScores.isEmpty()) {
+            log.debug("No similar users found for userId {}", userId);
+            return List.of();
+        }
+
+        // Find the most similar user
+        Long mostSimilarUserId = similarityScores.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(null);
+
+        if (mostSimilarUserId == null) {
+            log.debug("No most similar user found for userId {}", userId);
+            return List.of();
+        }
+
+        // Get recommendations
+        Set<Long> recommendations = new HashSet<>(userLikes.get(mostSimilarUserId));
+        recommendations.removeAll(likedByUser);
+
+        if (recommendations.isEmpty()) {
+            log.debug("No recommendations found for userId {}", userId);
+            return List.of();
+        }
+
+        log.debug("Found recommendations for userId {}: {}", userId, recommendations);
+        return recommendations.stream()
+                .map(storage::getFilmById)
+                .map(filmMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
 
     /**
      * Fetches the top films based on the number of likes as DTOs.

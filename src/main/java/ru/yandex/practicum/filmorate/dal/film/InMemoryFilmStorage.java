@@ -162,6 +162,11 @@ public class InMemoryFilmStorage implements FilmStorage {
         }
     }
 
+    @Override
+    public Collection<Film> getFilmsByDirector(long directorId, String sortBy) {
+        return null;
+    }
+
     /**
      * Populates a film with its MPA rating and genres.
      *
@@ -219,6 +224,12 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     // Заглушка
     public Collection<Film> getTopFilms(int count, Integer genreId, Integer year) {
+        return null;
+    }
+
+    // Заглушка
+    @Override
+    public Map<Long, Set<Long>> getAllUserLikes() {
         return null;
     }
 }

@@ -3,6 +3,8 @@ package ru.yandex.practicum.filmorate.dal.film;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Interface for managing storage operations related to films.
@@ -81,4 +83,13 @@ public interface FilmStorage {
      * @return a collection of the top films.
      */
     Collection<Film> getTopFilms(int count, Integer genreId, Integer year);
+
+    /**
+     * Retrieves a map of all users and the films they liked.
+     *
+     * @return a {@link Map} where the key is the user ID and the value is a {@link Set} of film IDs liked by the user.
+     */
+    Map<Long, Set<Long>> getAllUserLikes();
+
+    Collection<Film> getFilmsByDirector(long directorId, String sortBy);
 }

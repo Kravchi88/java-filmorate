@@ -6,6 +6,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -30,23 +31,27 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
     private final RowMapper<Film> filmRowMapper;
     private final RowMapper<Mpa> mpaRowMapper;
     private final RowMapper<Genre> genreRowMapper;
+    private final RowMapper<Director> directorRowMapper;
 
     /**
      * Constructs a new {@code FilmDbStorage}.
      *
-     * @param jdbcTemplate   the {@link JdbcTemplate} instance for interacting with the database.
-     * @param filmRowMapper  the {@link RowMapper} for mapping {@link Film} rows.
-     * @param mpaRowMapper   the {@link RowMapper} for mapping {@link Mpa} rows.
-     * @param genreRowMapper the {@link RowMapper} for mapping {@link Genre} rows.
+     * @param jdbcTemplate      the {@link JdbcTemplate} instance for interacting with the database.
+     * @param filmRowMapper     the {@link RowMapper} for mapping {@link Film} rows.
+     * @param mpaRowMapper      the {@link RowMapper} for mapping {@link Mpa} rows.
+     * @param genreRowMapper    the {@link RowMapper} for mapping {@link Genre} rows.
+     * @param directorRowMapper the {@link RowMapper} for mapping {@link Director} rows.
      */
     public FilmDbStorage(JdbcTemplate jdbcTemplate,
                          RowMapper<Film> filmRowMapper,
                          RowMapper<Mpa> mpaRowMapper,
-                         RowMapper<Genre> genreRowMapper) {
+                         RowMapper<Genre> genreRowMapper,
+                         RowMapper<Director> directorRowMapper) {
         this.jdbcTemplate = jdbcTemplate;
         this.filmRowMapper = filmRowMapper;
         this.mpaRowMapper = mpaRowMapper;
         this.genreRowMapper = genreRowMapper;
+        this.directorRowMapper = directorRowMapper;
     }
 
     /**
@@ -83,14 +88,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
      */
     @Override
     public Film addFilm(Film film) {
-        if (film.getMpa() != null) {
-            validateEntityExists(film.getMpa().getId(), "MPA", "mpa_ratings", "mpa_rating_id");
-        }
-        if (film.getGenres() != null) {
-            film.getGenres().forEach(genre ->
-                    validateEntityExists(genre.getId(), "Genre", "genres", "genre_id"));
-        }
-
+        filmAttributesValidation(film);
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(SQL_INSERT_FILM, Statement.RETURN_GENERATED_KEYS);
@@ -99,6 +97,11 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
             ps.setDate(3, Date.valueOf(film.getReleaseDate()));
             ps.setObject(4, film.getDuration() != 0 ? film.getDuration() : null, Types.INTEGER);
             ps.setObject(5, film.getMpa() != null ? film.getMpa().getId() : null, Types.INTEGER);
+            ps.setObject(6, film.getDirectors()
+                    .stream()
+                    .findFirst()
+                    .map(Director::getId)
+                    .orElse(null), Types.INTEGER);
             return ps;
         }, keyHolder);
 
@@ -119,20 +122,14 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
      */
     @Override
     public Film updateFilm(Film film) {
-        if (film.getMpa() != null) {
-            validateEntityExists(film.getMpa().getId(), "MPA", "mpa_ratings", "mpa_rating_id");
-        }
-        if (film.getGenres() != null) {
-            film.getGenres().forEach(genre ->
-                    validateEntityExists(genre.getId(), "Genre", "genres", "genre_id"));
-        }
-
+        filmAttributesValidation(film);
         int updatedRows = jdbcTemplate.update(SQL_UPDATE_FILM,
                 film.getName(),
                 film.getDescription(),
                 Date.valueOf(film.getReleaseDate()),
                 film.getDuration() != 0 ? film.getDuration() : null,
                 film.getMpa() != null ? film.getMpa().getId() : null,
+                film.getDirectors().stream().findFirst().map(Director::getId).orElse(null),
                 film.getId()
         );
 
@@ -188,6 +185,26 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
     }
 
     /**
+     * Retrieves all films of a specific director, sorted by the specified criterion.
+     *
+     * @param directorId the ID of the director.
+     * @param sortBy     the sorting criterion (either "likes" or "year").
+     * @return a {@link Collection} of films of the specified director, sorted by the given criterion.
+     */
+    @Override
+    public Collection<Film> getFilmsByDirector(long directorId, String sortBy) {
+        String sql = null;
+
+        switch (sortBy) {
+            case "likes" -> sql = SQL_SELECT_FILMS_BY_DIRECTOR_SORT_BY_LIKES;
+            case "year" -> sql = SQL_SELECT_FILMS_BY_DIRECTOR_SORT_BY_YEAR;
+        }
+
+        Map<Long, Film> filmMap = extractFilms(sql, directorId);
+        return filmMap.values();
+    }
+
+    /**
      * Extracts a map of films from the database query result. Each film is identified by its unique ID.
      * This method processes basic film data (such as ID, name, description, MPA rating, likes)
      * and adds genres if they are present in the result set.
@@ -238,6 +255,13 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
                     film.setMpa(mpa);
                 }
 
+                int directorId = rs.getInt("director_id");
+                if (directorId > 0) {
+                    Director director = directorRowMapper.mapRow(rs, rs.getRow());
+                    film.setDirectors(new HashSet<>());
+                    film.getDirectors().add(director);
+                }
+
                 film.setGenres(new HashSet<>());
                 return film;
             } catch (SQLException e) {
@@ -258,6 +282,20 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         );
     }
 
+    private void filmAttributesValidation(Film film) {
+        if (film.getMpa() != null) {
+            validateEntityExists(film.getMpa().getId(), "MPA", "mpa_ratings", "mpa_rating_id");
+        }
+        if (film.getGenres() != null) {
+            film.getGenres().forEach(genre ->
+                    validateEntityExists(genre.getId(), "Genre", "genres", "genre_id"));
+        }
+        if (film.getDirectors() != null) {
+            film.getDirectors().forEach(director ->
+                    validateEntityExists(director.getId(), "Director", "directors", "director_id"));
+        }
+    }
+
     /**
      * Validates if an entity exists in the database.
      *
@@ -273,6 +311,25 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         if (count == 0) {
             throw new ValidationException(entity + " with ID " + id + " does not exist.");
         }
+    }
+
+
+    @Override
+    public Map<Long, Set<Long>> getAllUserLikes() {
+        String sql = """
+            SELECT user_id, film_id
+            FROM user_film_likes
+        """;
+
+        Map<Long, Set<Long>> userLikes = new HashMap<>();
+
+        jdbcTemplate.query(sql, rs -> {
+            Long userId = rs.getLong("user_id");
+            Long filmId = rs.getLong("film_id");
+            userLikes.computeIfAbsent(userId, k -> new HashSet<>()).add(filmId);
+        });
+
+        return userLikes;
     }
 
     /**

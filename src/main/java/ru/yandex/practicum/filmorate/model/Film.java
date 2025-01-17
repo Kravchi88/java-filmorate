@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -64,10 +65,12 @@ public class Film {
     /**
      * List of genres associated with the film.
      */
-    private Set<Genre> genres;
+    private Set<Genre> genres = new HashSet<>();
 
     /**
      * Age rating of the film as defined by the Motion Picture Association (MPA).
      */
     private Mpa mpa;
+
+    private Set<Director> directors = new HashSet<>();
 }
