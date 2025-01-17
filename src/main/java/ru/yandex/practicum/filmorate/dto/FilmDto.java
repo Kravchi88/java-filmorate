@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.dto;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -45,6 +46,7 @@ public class FilmDto {
     /**
      * Age rating of the film as a string.
      */
+
     private MpaDto mpa;
 
     /**

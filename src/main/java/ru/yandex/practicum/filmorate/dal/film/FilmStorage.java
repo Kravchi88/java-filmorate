@@ -73,4 +73,7 @@ public interface FilmStorage {
     void removeLike(long filmId, long userId);
 
     Collection<Film> getFilmsByDirector(long directorId, String sortBy);
+
+
+    Collection<Film> getCommonFilms(long userId, long friendId);
 }
