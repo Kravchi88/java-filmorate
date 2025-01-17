@@ -4,12 +4,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import jakarta.validation.Valid;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Controller class for managing users and their relationships.
@@ -150,5 +152,17 @@ public final class UserController {
                 userId, otherId
         );
         return service.getCommonFriends(userId, otherId);
+    }
+
+    /**
+     * Retrieves film recommendations for a user based on collaborative filtering.
+     *
+     * @param id the ID of the user for whom recommendations are generated.
+     * @return a list of recommended films as DTOs.
+     */
+    @GetMapping("/{id}/recommendations")
+    public List<FilmDto> getRecommendations(@PathVariable Long id) {
+        log.debug("Received GET request for recommendations for user with id {}", id);
+        return service.getRecommendations(id);
     }
 }

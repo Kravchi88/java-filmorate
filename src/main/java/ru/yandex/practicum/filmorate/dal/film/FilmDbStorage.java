@@ -352,4 +352,23 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
             throw new ValidationException(entity + " with ID " + id + " does not exist.");
         }
     }
+
+
+    @Override
+    public Map<Long, Set<Long>> getAllUserLikes() {
+        String sql = """
+            SELECT user_id, film_id
+            FROM user_film_likes
+        """;
+
+        Map<Long, Set<Long>> userLikes = new HashMap<>();
+
+        jdbcTemplate.query(sql, rs -> {
+            Long userId = rs.getLong("user_id");
+            Long filmId = rs.getLong("film_id");
+            userLikes.computeIfAbsent(userId, k -> new HashSet<>()).add(filmId);
+        });
+
+        return userLikes;
+    }
 }
