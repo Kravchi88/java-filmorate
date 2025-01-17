@@ -28,7 +28,8 @@ import java.util.stream.Collectors;
  * Provides methods to manage films, their likes, associated genres, and MPA ratings.
  */
 @Repository("filmDbStorage")
-public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
+public class FilmDbStorage implements FilmStorage, FilmSqlConstants
+{
 
     private final JdbcTemplate jdbcTemplate;
     private final RowMapper<Film> filmRowMapper;
