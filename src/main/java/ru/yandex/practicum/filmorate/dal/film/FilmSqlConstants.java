@@ -129,11 +129,13 @@ public interface FilmSqlConstants {
     String SQL_GET_COMMON_FILMS = """
             SELECT f.film_id, f.film_name, f.film_description, f.film_release_date, f.film_duration,
                    f.film_mpa_rating_id, g.genre_id, g.genre_name, m.mpa_rating_name,
+                   d.director_id, d.director_name,
                    COUNT(DISTINCT ufl.user_id) AS likes_count
             FROM films f
             JOIN user_film_likes u1 ON f.film_id = u1.film_id
             JOIN user_film_likes u2 ON f.film_id = u2.film_id
             LEFT JOIN film_genres fg ON f.film_id = fg.film_id
+            LEFT JOIN directors d ON f.film_director_id = d.director_id
             LEFT JOIN genres g ON fg.genre_id = g.genre_id
             LEFT JOIN mpa_ratings m ON f.film_mpa_rating_id = m.mpa_rating_id
             LEFT JOIN user_film_likes ufl ON f.film_id = ufl.film_id
