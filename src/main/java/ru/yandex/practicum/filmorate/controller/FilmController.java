@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -43,20 +44,6 @@ public final class FilmController {
     public Collection<FilmDto> getAllFilms() {
         log.debug("Received GET request for all films");
         return service.getAllFilms();
-    }
-
-    /**
-     * Retrieves the most popular films as DTOs.
-     *
-     * @param count the maximum number of films to retrieve (default is 10).
-     * @return a collection of the top films as DTOs.
-     */
-    @GetMapping("/popular")
-    public Collection<FilmDto> getTopFilms(
-            @RequestParam(value = "count", defaultValue = "10") final int count
-    ) {
-        log.debug("Received GET request for top {} films", count);
-        return service.getTopFilms(count);
     }
 
     /**
@@ -141,5 +128,65 @@ public final class FilmController {
                 userId, filmId
         );
         service.removeLike(filmId, userId);
+    }
+
+    /**
+     * Retrieves all films of a director, sorted by likes or release year.
+     *
+     * @param directorId the ID of the director.
+     * @param sortBy     the sorting criterion (either "year" or "likes").
+     * @return a collection of the director's films as DTOs, sorted by the specified criterion.
+     */
+    @GetMapping("/director/{directorId}")
+    public Collection<FilmDto> getDirectorFilms(
+            @PathVariable("directorId") final long directorId,
+            @RequestParam("sortBy") final String sortBy
+    ) {
+        log.debug("Received GET request for films of director {} sorted by {}", directorId, sortBy);
+        if (!sortBy.equals("year") && !sortBy.equals("likes")) {
+            throw new ValidationException("Invalid sortBy value. Must be 'year' or 'likes'.");
+        }
+        return service.getDirectorFilms(directorId, sortBy);
+    }
+
+    /**
+     * Retrieves the most popular films, optionally filtered by genre and year as DTOs.
+     *
+     * @param count   the maximum number of films to retrieve (default is 10).
+     * @param genreId the ID of the genre to filter by (optional).
+     * @param year    the year to filter by (optional).
+     * @return a collection of the top films as DTOs.
+     */
+    @GetMapping("/popular")
+    public Collection<FilmDto> getTopFilms(
+            @RequestParam(value = "count", defaultValue = "10") final int count,
+            @RequestParam(value = "genreId", required = false) final Integer genreId,
+            @RequestParam(value = "year", required = false) final Integer year
+    ) {
+        log.debug("Received GET request for top {} films with genreId={} and year={}", count, genreId, year);
+
+        // Если не переданы фильтры, вернуть фильмы без фильтрации
+        if (genreId == null && year == null) {
+            return service.getTopFilms(count); // Логика без фильтров
+        }
+
+        // Если переданы фильтры, вернуть фильмы с учётом фильтров
+        return service.getTopFilms(count, genreId, year); // Логика с фильтрами
+    }
+
+
+    /**
+     * Handles a GET request to retrieve a list of films that are liked by both the user and their friend.
+     *
+     * @param userId    The identifier of the user for whom the common films are requested.
+     * @param friendId  The identifier of the friend with whom the films are compared.
+     * @return A collection of {@link FilmDto} objects representing the films that are liked by both users.
+     */
+    @GetMapping("/common")
+    public Collection<FilmDto> getCommonFilms(
+            @RequestParam("userId") final long userId,
+            @RequestParam("friendId") final long friendId) {
+        log.debug("Received GET request for common films between user with id {} and user with id {}", userId, friendId);
+        return service.getCommonFilms(userId, friendId);
     }
 }
