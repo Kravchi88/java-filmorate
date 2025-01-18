@@ -118,10 +118,11 @@ public class ReviewDbStorage implements ReviewStorage, ReviewSqlConstants {
      */
     @Override
     public void deleteReview(Long id) {
+
         String userId = jdbcTemplate.queryForObject(GET_USER_FROM_DELETED_REVIEWS, new Object[]{id}, String.class);
         int updatedStatus = jdbcTemplate.update(DELETE_REVIEW_FROM_REVIEWS, id);
 
-         if(updatedStatus > 0) {
+         if (updatedStatus > 0) {
             UserEvent userEvent = new UserEvent();
             userEvent.setUserId(userId);
             userEvent.setEventType("REVIEW");
