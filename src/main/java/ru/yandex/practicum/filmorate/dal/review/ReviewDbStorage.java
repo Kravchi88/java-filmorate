@@ -6,12 +6,15 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dal.feed.FeedDbStorage;
 import ru.yandex.practicum.filmorate.dal.mappers.ReviewRowMapper;
 import ru.yandex.practicum.filmorate.dto.ReviewDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.UserEvent;
 
 import java.sql.*;
+import java.time.Instant;
 import java.util.*;
 
 /**
@@ -22,6 +25,9 @@ import java.util.*;
 @Repository
 @RequiredArgsConstructor
 public class ReviewDbStorage implements ReviewStorage, ReviewSqlConstants {
+
+    private final FeedDbStorage feedDbStorage;
+
 
     /**
      * Jdbc instance for storage operations.
@@ -56,6 +62,14 @@ public class ReviewDbStorage implements ReviewStorage, ReviewSqlConstants {
         Long id = Objects.requireNonNull(keyHolder.getKey()).longValue();
         log.debug("ID of just added review is: {}", id);
 
+        UserEvent userEvent = new UserEvent();
+        userEvent.setUserId(review.getUserId().toString());
+        userEvent.setEventType("REVIEW");
+        userEvent.setOperation("ADD");
+        userEvent.setEntityId(review.getFilmId());
+        userEvent.setTimestamp(Instant.now().toEpochMilli());
+        feedDbStorage.addEvent(userEvent);
+
         return getReviewById(id);
     }
 
@@ -80,6 +94,14 @@ public class ReviewDbStorage implements ReviewStorage, ReviewSqlConstants {
                 updatedStatus);
 
         if (updatedStatus == 1) {
+            UserEvent userEvent = new UserEvent();
+            userEvent.setUserId(review.getUserId().toString());
+            userEvent.setEventType("REVIEW");
+            userEvent.setOperation("UPDATE");
+            userEvent.setEntityId(review.getFilmId());
+            userEvent.setTimestamp(Instant.now().toEpochMilli());
+            feedDbStorage.addEvent(userEvent);
+
             log.debug("Review with ID: {} was successfully updated!", id);
             return getReviewById(id);
         } else {
@@ -97,6 +119,15 @@ public class ReviewDbStorage implements ReviewStorage, ReviewSqlConstants {
     @Override
     public void deleteReview(Long id) {
         int updatedStatus = jdbcTemplate.update(DELETE_REVIEW_FROM_REVIEWS, id);
+        String userId = jdbcTemplate.queryForObject(GET_USER_FROM_DELETED_REVIEWS, new Object[]{id}, String.class);
+
+        UserEvent userEvent = new UserEvent();
+        userEvent.setUserId(userId);
+        userEvent.setEventType("REVIEW");
+        userEvent.setOperation("DELETE");
+        userEvent.setEntityId(id);
+        userEvent.setTimestamp(Instant.now().toEpochMilli());
+        feedDbStorage.addEvent(userEvent);
 
         if (updatedStatus == 0) {
             log.debug("No review with ID: {}", id);
