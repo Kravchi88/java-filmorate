@@ -155,7 +155,6 @@ public final class UserController {
         return service.getCommonFriends(userId, otherId);
     }
 
-
     /**
      * Retrieves film recommendations for a user based on collaborative filtering.
      *
@@ -168,6 +167,15 @@ public final class UserController {
         return service.getRecommendations(id);
     }
 
+    /**
+     * Retrieves the feed list for a specific user.
+     * <p>
+     * This method handles GET requests to fetch the events associated with a user identified by their ID.
+     * </p>
+     *
+     * @param userId the ID of the user whose feed is to be retrieved
+     * @return a collection of {@link UserEvent} representing the user's feed
+     */
     @GetMapping("/{id}/feed")
     Collection<UserEvent> getUserFeedList(
             @PathVariable("id") final long userId) {

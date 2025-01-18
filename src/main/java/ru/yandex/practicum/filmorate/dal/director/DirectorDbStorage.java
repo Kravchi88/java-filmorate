@@ -32,6 +32,13 @@ public class DirectorDbStorage implements DirectorStorage {
         return jdbcTemplate.query(SQL_SELECT_ALL_DIRECTORS, directorRowMapper);
     }
 
+    /**
+     * Retrieves a director by their ID.
+     *
+     * @param id the ID of the director to retrieve
+     * @return a {@link Director} representing the director with the specified ID
+     * @throws NotFoundException if the director with the specified ID does not exist
+     */
     @Override
     public Director getDirectorById(int id) {
         return jdbcTemplate.query(SQL_SELECT_DIRECTOR_BY_ID, directorRowMapper, id)
@@ -40,6 +47,12 @@ public class DirectorDbStorage implements DirectorStorage {
                 .orElseThrow(() -> new NotFoundException("Director with id " + id + " not found."));
     }
 
+    /**
+     * Adds a new director to the database.
+     *
+     * @param director the director to add
+     * @return a {@link Director} representing the added director
+     */
     @Override
     public Director addDirector(Director director) {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
@@ -55,7 +68,13 @@ public class DirectorDbStorage implements DirectorStorage {
         return getDirectorById(director.getId());
     }
 
-
+    /**
+     * Updates an existing director in the database.
+     *
+     * @param director the director object containing updated information
+     * @return a {@link Director} representing the updated director
+     * @throws NotFoundException if the director with the specified ID does not exist
+     */
     @Override
     public Director updateDirector(Director director) {
         int updatedRows = jdbcTemplate.update(
@@ -71,6 +90,12 @@ public class DirectorDbStorage implements DirectorStorage {
         }
     }
 
+
+    /**
+     * Deletes a director by their ID.
+     *
+     * @param id the ID of the director to delete
+     */
     @Override
     public void deleteDirector(int id) {
         jdbcTemplate.update(SQL_DELETE_DIRECTOR, id);

@@ -20,6 +20,11 @@ public class FeedDbStorage implements FeedStorage {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    /**
+     * Adds a new user event to the database.
+     *
+     * @param userEvent the UserEvent object representing the user event to be added
+     */
     @Override
     public void addEvent(UserEvent userEvent) {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
