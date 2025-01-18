@@ -7,6 +7,12 @@ import ru.yandex.practicum.filmorate.model.Director;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+/**
+ * A RowMapper implementation for mapping rows of a ResultSet to Director objects.
+ *
+ * This class is used to convert each row of the ResultSet into a Director instance
+ * by extracting the director's ID and name from the corresponding columns.
+ */
 @Component
 public class DirectorRowMapper implements RowMapper<Director> {
 

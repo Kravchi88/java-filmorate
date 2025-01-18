@@ -67,5 +67,4 @@ public class User {
      */
     private Set<Long> likedFilms = new HashSet<>();
 
-    Set<UserEvent> usersEventSet;
 }

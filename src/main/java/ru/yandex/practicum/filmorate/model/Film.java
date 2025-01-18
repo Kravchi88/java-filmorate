@@ -72,5 +72,9 @@ public class Film {
      */
     private Mpa mpa;
 
+    /**
+     * Set of directors associated with the film.
+     * This field can contain multiple directors.
+     */
     private Set<Director> directors = new HashSet<>();
 }

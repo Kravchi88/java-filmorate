@@ -91,8 +91,21 @@ public interface FilmStorage {
      */
     Map<Long, Set<Long>> getAllUserLikes();
 
+    /**
+     * Retrieves films by director ID considering sorting.
+     *
+     * @param directorId the ID of the director for filtering.
+     * @param sortBy     the sorting criteria.
+     * @return a collection of films directed by the specified director.
+     */
     Collection<Film> getFilmsByDirector(long directorId, String sortBy);
 
-
+    /**
+     * Retrieves common films between two users.
+     *
+     * @param userId   the ID of the first user.
+     * @param friendId the ID of the second user.
+     * @return a collection of common films between the two users.
+     */
     Collection<Film> getCommonFilms(long userId, long friendId);
 }

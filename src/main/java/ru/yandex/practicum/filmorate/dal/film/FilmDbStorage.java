@@ -297,6 +297,14 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         );
     }
 
+    /**
+     * Validates the attributes of the given film.
+     *
+     * This method checks if the MPA rating, genres, and directors associated with the film
+     * exist in the database. If any of these entities do not exist, a validation error will be thrown.
+     *
+     * @param film the Film object to validate
+     */
     private void filmAttributesValidation(Film film) {
         if (film.getMpa() != null) {
             validateEntityExists(film.getMpa().getId(), "MPA", "mpa_ratings", "mpa_rating_id");
@@ -383,7 +391,11 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         return commonFilms;
     }
 
-
+    /**
+     * Retrieves a map of all users and the films they liked.
+     *
+     * @return a {@link Map} where the key is the user ID and the value is a {@link Set} of film IDs liked by the user.
+     */
     @Override
     public Map<Long, Set<Long>> getAllUserLikes() {
         String sql = """

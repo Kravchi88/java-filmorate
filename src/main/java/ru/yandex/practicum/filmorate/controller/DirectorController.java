@@ -19,6 +19,9 @@ import ru.yandex.practicum.filmorate.service.DirectorService;
 
 import java.util.Collection;
 
+/**
+ * Controller for managing operations related to directors.
+ */
 @RestController
 @RequestMapping("/directors")
 @Slf4j

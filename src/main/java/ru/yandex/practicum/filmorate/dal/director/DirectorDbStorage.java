@@ -12,13 +12,12 @@ import java.sql.Statement;
 import java.util.Collection;
 import java.util.Objects;
 
+/**
+ * This class is responsible for managing director data in the database.
+ * It implements both DirectorStorage and DirectorSqlStorage interfaces.
+ */
 @Repository
-public class DirectorDbStorage implements DirectorStorage {
-    private static final String SQL_SELECT_ALL_DIRECTORS = "SELECT * FROM directors";
-    private static final String SQL_SELECT_DIRECTOR_BY_ID = "SELECT * FROM directors WHERE director_id = ?";
-    private static final String SQL_INSERT_DIRECTOR = "INSERT INTO directors (director_name) VALUES (?)";
-    private static final String SQL_UPDATE_DIRECTOR = "UPDATE directors SET director_name = ? WHERE director_id = ?";
-    private static final String SQL_DELETE_DIRECTOR = "DELETE FROM directors WHERE director_id = ?";
+public class DirectorDbStorage implements DirectorStorage, DirectorSqlStorage {
     private final JdbcTemplate jdbcTemplate;
     private final RowMapper<Director> directorRowMapper;
 

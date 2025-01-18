@@ -8,6 +8,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.ZoneId;
 
+/**
+ * A RowMapper implementation for mapping rows of a ResultSet to UserEvent objects.
+ *
+ * This class is used to convert each row of the ResultSet into a UserEvent instance
+ * by extracting the event ID, user ID, event type, operation, entity ID, and timestamp
+ * from the corresponding columns.
+ */
 @Component
 public class UserEventRowMapper implements RowMapper<UserEvent> {
 

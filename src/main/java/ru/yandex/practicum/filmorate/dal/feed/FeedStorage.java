@@ -4,9 +4,9 @@ import ru.yandex.practicum.filmorate.model.UserEvent;
 
 public interface FeedStorage {
     /**
-     * Добавляет новое событие пользователя.
+     * Adds a new user event.
      *
-     * @param userEvent объект UserEvent, представляющий новое событие
+     * @param userEvent the UserEvent object representing the new event
      */
     void addEvent(UserEvent userEvent);
 }
