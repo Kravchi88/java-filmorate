@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.UserEvent;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import jakarta.validation.Valid;
@@ -154,6 +155,7 @@ public final class UserController {
         return service.getCommonFriends(userId, otherId);
     }
 
+
     /**
      * Retrieves film recommendations for a user based on collaborative filtering.
      *
@@ -165,4 +167,12 @@ public final class UserController {
         log.debug("Received GET request for recommendations for user with id {}", id);
         return service.getRecommendations(id);
     }
+
+    @GetMapping("/{id}/feed")
+    Collection<UserEvent> getUserFeedList(
+            @PathVariable("id") final long userId) {
+        log.debug("Received GET request for user feed for user with id {}", userId);
+        return service.getUserFeed(userId);
+    }
+
 }

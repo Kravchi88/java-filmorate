@@ -23,6 +23,11 @@ public interface ReviewSqlConstants {
                     DELETE FROM reviews
                     WHERE id = ?
                     """;
+    String GET_USER_FROM_DELETED_REVIEWS =
+            """
+                    SELECT user_id FROM reviews
+                    WHERE id =?
+                    """;
 
     String GET_REVIEW_BY_ID_FROM_REVIEWS =
             """

@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.UserEvent;
 
 import java.util.Collection;
 import java.util.List;
@@ -39,6 +40,11 @@ public final class UserService {
         this.userMapper = userMapper;
         this.filmService = filmService;
     }
+
+    public List<UserEvent> getUserFeed(long userId) {
+        return storage.getUserEvents(userId);
+    }
+
 
     /**
      * Fetches all users as DTOs.

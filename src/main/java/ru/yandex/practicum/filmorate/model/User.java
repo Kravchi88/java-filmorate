@@ -66,4 +66,6 @@ public class User {
      * This is a mutable set used to track the user's liked films.
      */
     private Set<Long> likedFilms = new HashSet<>();
+
+    Set<UserEvent> usersEventSet;
 }

@@ -4,19 +4,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dal.feed.FeedDbStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.*;
 
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
+import java.sql.*;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,6 +19,7 @@ import java.util.stream.Collectors;
  * Implementation of {@link FilmStorage} that interacts with the database using JDBC.
  * Provides methods to manage films, their likes, associated genres, and MPA ratings.
  */
+
 @Repository("filmDbStorage")
 public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
 
@@ -32,6 +28,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
     private final RowMapper<Mpa> mpaRowMapper;
     private final RowMapper<Genre> genreRowMapper;
     private final RowMapper<Director> directorRowMapper;
+    private final FeedDbStorage feedDbStorage;
 
     /**
      * Constructs a new {@code FilmDbStorage}.
@@ -46,12 +43,14 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
                          RowMapper<Film> filmRowMapper,
                          RowMapper<Mpa> mpaRowMapper,
                          RowMapper<Genre> genreRowMapper,
-                         RowMapper<Director> directorRowMapper) {
+                         RowMapper<Director> directorRowMapper,
+                         FeedDbStorage feedDbStorage) {
         this.jdbcTemplate = jdbcTemplate;
         this.filmRowMapper = filmRowMapper;
         this.mpaRowMapper = mpaRowMapper;
         this.genreRowMapper = genreRowMapper;
         this.directorRowMapper = directorRowMapper;
+        this.feedDbStorage = feedDbStorage;
     }
 
     /**
@@ -170,6 +169,14 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
 
         if (existingLikes == 0) {
             jdbcTemplate.update(SQL_INSERT_LIKE, filmId, userId);
+
+            UserEvent userEvent = new UserEvent();
+            userEvent.setUserId(userId);
+            userEvent.setEventType("LIKE");
+            userEvent.setOperation("ADD");
+            userEvent.setEntityId(filmId);
+            userEvent.setTimestamp(Instant.now().toEpochMilli());
+            feedDbStorage.addEvent(userEvent);
         }
     }
 
@@ -182,6 +189,14 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
     @Override
     public void removeLike(long filmId, long userId) {
         jdbcTemplate.update(SQL_DELETE_LIKE, filmId, userId);
+
+        UserEvent userEvent = new UserEvent();
+        userEvent.setUserId(userId);
+        userEvent.setEventType("LIKE");
+        userEvent.setOperation("REMOVE");
+        userEvent.setEntityId(filmId);
+        userEvent.setTimestamp(Instant.now().toEpochMilli());
+        feedDbStorage.addEvent(userEvent);
     }
 
     /**
@@ -315,14 +330,14 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
 
     /**
      * Retrieves a list of common films liked by two users.
-     *
+     * <p>
      * This method queries the database to find films that are liked by both the user
      * identified by {@code userId} and the user identified by {@code friendId}.
      * It constructs a list of {@link Film} objects, each containing details about the film
      * and its associated genres. The method ensures that duplicate films are not included
      * in the result by using a map to track films by their unique identifiers.
      *
-     * @param userId the ID of the first user
+     * @param userId   the ID of the first user
      * @param friendId the ID of the second user (friend)
      * @return a list of {@link Film} objects that are common between the two users
      */
@@ -372,9 +387,9 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
     @Override
     public Map<Long, Set<Long>> getAllUserLikes() {
         String sql = """
-            SELECT user_id, film_id
-            FROM user_film_likes
-        """;
+                    SELECT user_id, film_id
+                    FROM user_film_likes
+                """;
 
         Map<Long, Set<Long>> userLikes = new HashMap<>();
 
