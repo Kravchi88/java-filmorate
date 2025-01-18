@@ -63,7 +63,7 @@ public class ReviewDbStorage implements ReviewStorage, ReviewSqlConstants {
         log.debug("ID of just added review is: {}", id);
 
         UserEvent userEvent = new UserEvent();
-        userEvent.setUserId(review.getUserId().toString());
+        userEvent.setUserId(review.getUserId());
         userEvent.setEventType("REVIEW");
         userEvent.setOperation("ADD");
         userEvent.setEntityId(review.getFilmId());
@@ -95,7 +95,7 @@ public class ReviewDbStorage implements ReviewStorage, ReviewSqlConstants {
 
         if (updatedStatus == 1) {
             UserEvent userEvent = new UserEvent();
-            userEvent.setUserId(review.getUserId().toString());
+            userEvent.setUserId(review.getUserId());
             userEvent.setEventType("REVIEW");
             userEvent.setOperation("UPDATE");
             userEvent.setEntityId(review.getFilmId());
@@ -119,7 +119,7 @@ public class ReviewDbStorage implements ReviewStorage, ReviewSqlConstants {
     @Override
     public void deleteReview(Long id) {
 
-        String userId = jdbcTemplate.queryForObject(GET_USER_FROM_DELETED_REVIEWS, new Object[]{id}, String.class);
+        Long userId = jdbcTemplate.queryForObject(GET_USER_FROM_DELETED_REVIEWS, new Object[]{id}, Long.class);
         int updatedStatus = jdbcTemplate.update(DELETE_REVIEW_FROM_REVIEWS, id);
 
          if (updatedStatus > 0) {

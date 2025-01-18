@@ -171,7 +171,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
             jdbcTemplate.update(SQL_INSERT_LIKE, filmId, userId);
 
             UserEvent userEvent = new UserEvent();
-            userEvent.setUserId(String.valueOf(userId));
+            userEvent.setUserId(userId);
             userEvent.setEventType("LIKE");
             userEvent.setOperation("ADD");
             userEvent.setEntityId(filmId);
@@ -191,7 +191,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         jdbcTemplate.update(SQL_DELETE_LIKE, filmId, userId);
 
         UserEvent userEvent = new UserEvent();
-        userEvent.setUserId(String.valueOf(userId));
+        userEvent.setUserId(userId);
         userEvent.setEventType("LIKE");
         userEvent.setOperation("REMOVE");
         userEvent.setEntityId(filmId);

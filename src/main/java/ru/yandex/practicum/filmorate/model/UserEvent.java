@@ -9,7 +9,7 @@ import lombok.experimental.FieldDefaults;
 
 public class UserEvent {
     Long timestamp;
-    String userId;
+    Long userId;
     String eventType;
     String operation;
     long eventId;

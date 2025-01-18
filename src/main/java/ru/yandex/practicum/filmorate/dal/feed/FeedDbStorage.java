@@ -26,7 +26,7 @@ public class FeedDbStorage implements FeedStorage {
 
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(INSERT_USER_EVENTS, new String[]{"event_id"});
-            ps.setString(1, userEvent.getUserId());
+            ps.setLong(1, userEvent.getUserId());
             ps.setString(2, userEvent.getEventType());
             ps.setString(3, userEvent.getOperation());
             ps.setLong(4, userEvent.getEntityId());

@@ -150,7 +150,7 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
             jdbcTemplate.update(INSERT_USER_FRIENDSHIP, userId, friendId, false);
 
             UserEvent userEvent = new UserEvent();
-            userEvent.setUserId(String.valueOf(userId));
+            userEvent.setUserId(userId);
             userEvent.setEventType("FRIEND");
             userEvent.setOperation("ADD");
             userEvent.setEntityId(friendId);
@@ -199,7 +199,7 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
                 jdbcTemplate.update(INSERT_USER_FRIENDSHIP, friendId, userId, false);
             }
             UserEvent userEvent = new UserEvent();
-            userEvent.setUserId(String.valueOf(userId));
+            userEvent.setUserId(userId);
             userEvent.setEventType("FRIEND");
             userEvent.setOperation("REMOVE");
             userEvent.setEntityId(friendId);
