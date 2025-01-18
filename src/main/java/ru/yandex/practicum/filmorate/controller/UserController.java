@@ -168,7 +168,7 @@ public final class UserController {
         return service.getRecommendations(id);
     }
 
-    @GetMapping("/{id}/feed")
+    @GetMapping("/feed")
     Collection<UserEvent> getUserFeedList(
             @PathVariable("id") final long userId) {
         log.debug("Received GET request for user feed for user with id {}", userId);
