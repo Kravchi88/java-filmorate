@@ -1,7 +1,9 @@
 package ru.yandex.practicum.filmorate.dto;
 
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 /**
  * Data Transfer Object for Review.
@@ -9,36 +11,37 @@ import lombok.Data;
  */
 @Data
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ReviewDto {
 
     /**
      * Unique identifier for the review.
      */
-    private Long reviewId;
+    Long reviewId;
 
     /**
      * Text content of the review.
      */
-    private String content;
+    String content;
 
     /**
      * Type of review: negative is false, positive is true.
      */
-    private Boolean isPositive;
+    Boolean isPositive;
 
     /**
      * Review author ID.
      */
-    private Long userId;
+    Long userId;
 
     /**
      * ID of the film for which the review is given.
      */
-    private Long filmId;
+    Long filmId;
 
     /**
      * The difference between likes and dislikes.
      * Calculated parameter.
      */
-    private int useful;
+    int useful;
 }

@@ -1,23 +1,26 @@
 package ru.yandex.practicum.filmorate.model;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 /**
  * Represents a film genre.
  * A genre provides a categorization of films based on their content and style (e.g., Comedy, Drama, Action).
  */
 @Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Genre {
 
     /**
      * The unique identifier for the genre.
      */
-    private int id;
+    int id;
 
     /**
      * The name of the genre.
      */
-    private String name;
+    String name;
 
     /**
      * Default constructor for creating an empty {@code Genre} instance.

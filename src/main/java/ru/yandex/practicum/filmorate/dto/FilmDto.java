@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.dto;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -10,47 +12,52 @@ import java.util.List;
  * This class is used to transfer film data to the client in a simplified format.
  */
 @Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class FilmDto {
 
     /**
      * Unique identifier for the film.
      */
-    private long id;
+    long id;
 
     /**
      * Name of the film.
      */
-    private String name;
+    String name;
 
     /**
      * Brief description of the film.
      */
-    private String description;
+    String description;
 
     /**
      * Release date of the film.
      */
-    private LocalDate releaseDate;
+    LocalDate releaseDate;
 
     /**
      * Duration of the film in minutes.
      */
-    private int duration;
+    int duration;
 
     /**
      * Number of likes the film has received.
      */
-    private int likes;
+    int likes;
 
     /**
      * Age rating of the film as a string.
      */
 
-    private MpaDto mpa;
+    MpaDto mpa;
 
     /**
      * A list of genre names associated with the film.
      */
-    private List<GenreDto> genres;
-    private List<DirectorDto> directors;
+    List<GenreDto> genres;
+
+    /**
+     * A list of directors names associated with the film.
+     */
+    List<DirectorDto> directors;
 }

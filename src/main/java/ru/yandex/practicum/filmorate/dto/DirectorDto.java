@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.dto;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 /**
  * A Data Transfer Object (DTO) for representing a Director.
@@ -10,15 +12,16 @@ import lombok.Data;
  * for transferring director information between different layers of the application.
  */
 @Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class DirectorDto {
 
     /**
      * The unique identifier for the director
      */
-    private int id;
+    int id;
 
     /**
      * The name of the director
      */
-    private String name;
+    String name;
 }
