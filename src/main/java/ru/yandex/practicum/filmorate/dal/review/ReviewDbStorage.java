@@ -66,7 +66,7 @@ public class ReviewDbStorage implements ReviewStorage, ReviewSqlConstants {
         userEvent.setUserId(review.getUserId());
         userEvent.setEventType("REVIEW");
         userEvent.setOperation("ADD");
-        userEvent.setEntityId(review.getFilmId());
+        userEvent.setEntityId(review.getReviewId());
         userEvent.setTimestamp(Instant.now().toEpochMilli());
         feedDbStorage.addEvent(userEvent);
 
@@ -98,7 +98,7 @@ public class ReviewDbStorage implements ReviewStorage, ReviewSqlConstants {
             userEvent.setUserId(review.getUserId());
             userEvent.setEventType("REVIEW");
             userEvent.setOperation("UPDATE");
-            userEvent.setEntityId(review.getFilmId());
+            userEvent.setEntityId(review.getReviewId());
             userEvent.setTimestamp(Instant.now().toEpochMilli());
             feedDbStorage.addEvent(userEvent);
 
