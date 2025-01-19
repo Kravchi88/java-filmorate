@@ -341,16 +341,17 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
     public Collection<Film> searchFilms(String query, Set<String> criteria) {
         // SQL-запрос для поиска по названию фильма и/или по режиссеру
         StringBuilder sql = new StringBuilder("""
-        SELECT f.film_id, f.film_name, f.film_description, f.film_release_date,
-               f.film_duration, f.film_mpa_rating_id, m.mpa_rating_name,
-               d.director_id, d.director_name,
-               g.genre_id, g.genre_name
-        FROM films f
-        LEFT JOIN mpa_ratings m ON f.film_mpa_rating_id = m.mpa_rating_id
-        LEFT JOIN directors d ON f.film_director_id = d.director_id
-        LEFT JOIN film_genres fg ON f.film_id = fg.film_id
-        LEFT JOIN genres g ON fg.genre_id = g.genre_id
-        """);
+    SELECT f.film_id, f.film_name, f.film_description, f.film_release_date,
+           f.film_duration, f.film_mpa_rating_id, m.mpa_rating_name,
+           d.director_id, d.director_name,
+           g.genre_id, g.genre_name
+    FROM films f
+    LEFT JOIN mpa_ratings m ON f.film_mpa_rating_id = m.mpa_rating_id
+    LEFT JOIN directors d ON f.film_director_id = d.director_id
+    LEFT JOIN film_genres fg ON f.film_id = fg.film_id
+    LEFT JOIN genres g ON fg.genre_id = g.genre_id
+    """);
+
         // Условия для поиска
         List<String> conditions = new ArrayList<>();
         List<Object> params = new ArrayList<>();
@@ -381,13 +382,14 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
             mpa.setName(rs.getString("mpa_rating_name"));
             film.setMpa(mpa);
 
-            Director director = null;
+            Set<Director> directors = new HashSet<>();
             if (rs.getInt("director_id") != 0) {
-                director = new Director();
+                Director director = new Director();
                 director.setId(rs.getInt("director_id"));
                 director.setName(rs.getString("director_name"));
-                film.getDirectors().add(director);
+                directors.add(director);
             }
+            film.setDirectors(directors);
 
             Set<Genre> genres = new HashSet<>();
             do {
