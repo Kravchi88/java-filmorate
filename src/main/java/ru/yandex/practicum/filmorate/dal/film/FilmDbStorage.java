@@ -339,23 +339,36 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
 
     @Override
     public Collection<Film> searchFilms(String query, Set<String> criteria) {
-        // SQL запрос для поиска по названию фильма и/или по режиссеру
+        // SQL-запрос для поиска по названию фильма и/или по режиссеру
         StringBuilder sql = new StringBuilder("""
         SELECT f.film_id, f.film_name, f.film_description, f.film_release_date,
                f.film_duration, f.mpa_rating_id, m.mpa_rating_name,
-               d.director_id, d.director_name
+               d.director_id, d.director_name,
+               (SELECT COUNT(*) FROM likes l WHERE l.film_id = f.film_id) AS popularity
         FROM films f
         LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.mpa_rating_id
         LEFT JOIN directors d ON f.director_id = d.director_id
-        WHERE LOWER(f.film_name) LIKE LOWER(CONCAT('%', ?, '%'))
     """);
+        // Условия для поиска
+        List<String> conditions = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
 
-        // Добавление условия для поиска и по режиссерам
-        if (criteria != null && criteria.contains("director")) {
-            sql.append(" AND LOWER(d.director_name) LIKE LOWER(CONCAT('%', ?, '%'))");
+        if (criteria.contains("title")) {
+            conditions.add("LOWER(f.film_name) LIKE LOWER(CONCAT('%', ?, '%'))");
+            params.add(query);
+        }
+        if (criteria.contains("director")) {
+            conditions.add("LOWER(d.director_name) LIKE LOWER(CONCAT('%', ?, '%'))");
+            params.add(query);
         }
 
-        return jdbcTemplate.query(sql.toString(), (rs, rowNum) -> {
+        if (!conditions.isEmpty()) {
+            sql.append("WHERE ").append(String.join(" OR ", conditions));
+        }
+
+        sql.append(" ORDER BY popularity DESC");
+
+        return jdbcTemplate.query(sql.toString(), params.toArray(), (rs, rowNum) -> {
             Film film = new Film();
             film.setId(rs.getLong("film_id"));
             film.setName(rs.getString("film_name"));
@@ -375,7 +388,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
             film.getDirectors().add(director);
 
             return film;
-        }, query);
+        });
     }
 
     /**
