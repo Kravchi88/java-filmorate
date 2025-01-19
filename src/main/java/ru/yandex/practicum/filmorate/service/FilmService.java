@@ -11,13 +11,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.dal.film.FilmStorage;
 
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -267,4 +261,31 @@ public final class FilmService {
         return storage.getCommonFilms(userId, friendId).stream()
                 .map(filmMapper::toDto).collect(Collectors.toList());
     }
+
+    /**
+     * Searches for films based on the given query and criteria.
+     *
+     * @param query the search query substring.
+     * @param by    the search criteria: "title", "director", or both separated by a comma.
+     * @return a list of films matching the search criteria.
+     */
+    public List<FilmDto> searchFilms(final String query, final String by) {
+        log.debug("Searching for films with query '{}' by '{}'", query, by);
+
+        Set<String> criteria = Arrays.stream(by.split(","))
+                .map(String::trim)
+                .collect(Collectors.toSet());
+
+        if (criteria.isEmpty() || (!criteria.contains("title") && !criteria.contains("director"))) {
+            throw new ValidationException("Invalid 'by' parameter. Must include 'title' or 'director'.");
+        }
+
+        List<Film> results = new ArrayList<>(storage.searchFilms(query, criteria));
+        log.debug("Found {} films matching the query '{}' by '{}'", results.size(), query, by);
+
+        return results.stream()
+                .map(filmMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
 }

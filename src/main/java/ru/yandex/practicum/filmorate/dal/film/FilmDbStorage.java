@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.dal.feed.FeedDbStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.*;
+import java.util.List;
 
 import java.sql.Date;
 import java.sql.*;
@@ -334,6 +335,47 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         if (count == 0) {
             throw new ValidationException(entity + " with ID " + id + " does not exist.");
         }
+    }
+
+    @Override
+    public Collection<Film> searchFilms(String query, Set<String> criteria) {
+        // SQL запрос для поиска по названию фильма и/или по режиссеру
+        StringBuilder sql = new StringBuilder("""
+        SELECT f.film_id, f.film_name, f.film_description, f.film_release_date,
+               f.film_duration, f.mpa_rating_id, m.mpa_rating_name,
+               d.director_id, d.director_name
+        FROM films f
+        LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.mpa_rating_id
+        LEFT JOIN directors d ON f.director_id = d.director_id
+        WHERE LOWER(f.film_name) LIKE LOWER(CONCAT('%', ?, '%'))
+    """);
+
+        // Добавление условия для поиска и по режиссерам
+        if (criteria != null && criteria.contains("director")) {
+            sql.append(" AND LOWER(d.director_name) LIKE LOWER(CONCAT('%', ?, '%'))");
+        }
+
+        return jdbcTemplate.query(sql.toString(), (rs, rowNum) -> {
+            Film film = new Film();
+            film.setId(rs.getLong("film_id"));
+            film.setName(rs.getString("film_name"));
+            film.setDescription(rs.getString("film_description"));
+            film.setReleaseDate(rs.getDate("film_release_date").toLocalDate());
+            film.setDuration(rs.getInt("film_duration"));
+
+            Mpa mpa = new Mpa();
+            mpa.setId(rs.getInt("mpa_rating_id"));
+            mpa.setName(rs.getString("mpa_rating_name"));
+            film.setMpa(mpa);
+
+            Director director = new Director();
+            director.setId(rs.getInt("director_id"));
+            director.setName(rs.getString("director_name"));
+
+            film.getDirectors().add(director);
+
+            return film;
+        }, query);
     }
 
     /**

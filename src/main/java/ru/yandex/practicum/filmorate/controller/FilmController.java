@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import java.util.List;
 
 import jakarta.validation.Valid;
 import java.util.Collection;
@@ -188,5 +189,20 @@ public final class FilmController {
             @RequestParam("friendId") final long friendId) {
         log.debug("Received GET request for common films between user with id {} and user with id {}", userId, friendId);
         return service.getCommonFilms(userId, friendId);
+    }
+
+    /**
+     * Handles a GET request to search for films by title and/or director.
+     *
+     * @param query the search query substring.
+     * @param by    the search criteria: "title", "director", or both separated by a comma.
+     * @return a list of films matching the search criteria.
+     */
+    @GetMapping("/search")
+    public List<FilmDto> searchFilms(
+            @RequestParam("query") final String query,
+            @RequestParam("by") final String by) {
+        log.debug("Received GET request to search films with query '{}' by '{}'", query, by);
+        return service.searchFilms(query, by);
     }
 }
