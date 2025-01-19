@@ -342,9 +342,8 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         // SQL-запрос для поиска по названию фильма и/или по режиссеру
         StringBuilder sql = new StringBuilder("""
         SELECT f.film_id, f.film_name, f.film_description, f.film_release_date,
-               f.film_duration, f.mpa_rating_id, m.mpa_rating_name,
-               d.director_id, d.director_name,
-               (SELECT COUNT(*) FROM user_film_likes l WHERE l.film_id = f.film_id) AS popularity
+               f.film_duration, f.film_mpa_rating_id, m.mpa_rating_name,
+               d.director_id, d.director_name
         FROM films f
         LEFT JOIN mpa_ratings m ON f.film_mpa_rating_id = m.mpa_rating_id
         LEFT JOIN directors d ON f.film_director_id = d.director_id
@@ -366,8 +365,6 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
             sql.append("WHERE ").append(String.join(" OR ", conditions));
         }
 
-        sql.append(" ORDER BY popularity DESC");
-
         return jdbcTemplate.query(sql.toString(), params.toArray(), (rs, rowNum) -> {
             Film film = new Film();
             film.setId(rs.getLong("film_id"));
@@ -377,7 +374,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
             film.setDuration(rs.getInt("film_duration"));
 
             Mpa mpa = new Mpa();
-            mpa.setId(rs.getInt("mpa_rating_id"));
+            mpa.setId(rs.getInt("film_mpa_rating_id"));
             mpa.setName(rs.getString("mpa_rating_name"));
             film.setMpa(mpa);
 
