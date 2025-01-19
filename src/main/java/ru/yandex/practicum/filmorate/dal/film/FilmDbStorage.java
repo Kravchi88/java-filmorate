@@ -343,11 +343,14 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         StringBuilder sql = new StringBuilder("""
         SELECT f.film_id, f.film_name, f.film_description, f.film_release_date,
                f.film_duration, f.film_mpa_rating_id, m.mpa_rating_name,
-               d.director_id, d.director_name
+               d.director_id, d.director_name,
+               g.genre_id, g.genre_name
         FROM films f
         LEFT JOIN mpa_ratings m ON f.film_mpa_rating_id = m.mpa_rating_id
         LEFT JOIN directors d ON f.film_director_id = d.director_id
-    """);
+        LEFT JOIN film_genres fg ON f.film_id = fg.film_id
+        LEFT JOIN genres g ON fg.genre_id = g.genre_id
+        """);
         // Условия для поиска
         List<String> conditions = new ArrayList<>();
         List<Object> params = new ArrayList<>();
@@ -378,11 +381,26 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
             mpa.setName(rs.getString("mpa_rating_name"));
             film.setMpa(mpa);
 
-            Director director = new Director();
-            director.setId(rs.getInt("director_id"));
-            director.setName(rs.getString("director_name"));
+            Director director = null;
+            if (rs.getInt("director_id") != 0) {
+                director = new Director();
+                director.setId(rs.getInt("director_id"));
+                director.setName(rs.getString("director_name"));
+                film.getDirectors().add(director);
+            }
 
-            film.getDirectors().add(director);
+            Set<Genre> genres = new HashSet<>();
+            do {
+                int genreId = rs.getInt("genre_id");
+                if (genreId != 0) {
+                    Genre genre = new Genre();
+                    genre.setId(genreId);
+                    genre.setName(rs.getString("genre_name"));
+                    genres.add(genre);
+                }
+            } while (rs.next() && rs.getLong("film_id") == film.getId());
+
+            film.setGenres(genres);
 
             return film;
         });
