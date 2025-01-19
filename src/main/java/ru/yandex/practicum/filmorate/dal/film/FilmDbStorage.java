@@ -344,10 +344,10 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         SELECT f.film_id, f.film_name, f.film_description, f.film_release_date,
                f.film_duration, f.mpa_rating_id, m.mpa_rating_name,
                d.director_id, d.director_name,
-               (SELECT COUNT(*) FROM likes l WHERE l.film_id = f.film_id) AS popularity
+               (SELECT COUNT(*) FROM user_film_likes l WHERE l.film_id = f.film_id) AS popularity
         FROM films f
-        LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.mpa_rating_id
-        LEFT JOIN directors d ON f.director_id = d.director_id
+        LEFT JOIN mpa_ratings m ON f.film_mpa_rating_id = m.mpa_rating_id
+        LEFT JOIN directors d ON f.film_director_id = d.director_id
     """);
         // Условия для поиска
         List<String> conditions = new ArrayList<>();
