@@ -382,24 +382,17 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
             mpa.setName(rs.getString("mpa_rating_name"));
             film.setMpa(mpa);
 
-            Set<Director> directors = new HashSet<>();
-            if (rs.getInt("director_id") != 0) {
-                Director director = new Director();
-                director.setId(rs.getInt("director_id"));
-                director.setName(rs.getString("director_name"));
-                directors.add(director);
-            }
-            film.setDirectors(directors);
+            Director director = new Director();
+            director.setId(rs.getInt("director_id"));
+            director.setName(rs.getString("director_name"));
+            film.getDirectors().add(director);
 
             Set<Genre> genres = new HashSet<>();
             do {
-                int genreId = rs.getInt("genre_id");
-                if (genreId != 0) {
-                    Genre genre = new Genre();
-                    genre.setId(genreId);
-                    genre.setName(rs.getString("genre_name"));
-                    genres.add(genre);
-                }
+                Genre genre = new Genre();
+                genre.setId(rs.getInt("genre_id"));
+                genre.setName(rs.getString("genre_name"));
+                genres.add(genre);
             } while (rs.next() && rs.getLong("film_id") == film.getId());
 
             film.setGenres(genres);
