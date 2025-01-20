@@ -7,7 +7,10 @@ import ru.yandex.practicum.filmorate.dto.GenreDto;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -57,6 +60,39 @@ public class FilmMapper {
     }
 
     /**
+     * Converts a {@link ResultSet} to a {@link FilmDto}.
+     *
+     * @param resultSet the {@link ResultSet} containing film data.
+     * @return the corresponding {@link FilmDto}.
+     * @throws SQLException if there is an error accessing the {@link ResultSet}.
+     */
+    public FilmDto toDto(ResultSet resultSet) throws SQLException {
+        FilmDto filmDto = new FilmDto();
+
+        filmDto.setId(resultSet.getLong("film_id"));
+        filmDto.setName(resultSet.getString("name"));
+        filmDto.setDescription(resultSet.getString("description"));
+        filmDto.setReleaseDate(resultSet.getDate("release_date").toLocalDate());
+        filmDto.setDuration(resultSet.getInt("duration"));
+        filmDto.setLikes(resultSet.getInt("likes"));
+
+        if (resultSet.getObject("mpa_id") != null) {
+            int mpaId = resultSet.getInt("mpa_id");
+            Mpa mpa = new Mpa();
+            mpa.setId(mpaId);
+            filmDto.setMpa(mpaMapper.toDto(mpa));
+        }
+
+        Set<Genre> genres = fetchGenres(resultSet.getLong("film_id"));
+        filmDto.setGenres(toSortedGenreDtoList(genres));
+
+        Set<Director> directors = fetchDirectors(resultSet.getLong("film_id"));
+        filmDto.setDirectors(toSortedDirectorDtoList(directors));
+
+        return filmDto;
+    }
+
+    /**
      * Converts a set of {@link Genre} entities to a sorted list of {@link GenreDto}.
      * The list is sorted by the genre IDs in ascending order.
      *
@@ -83,5 +119,13 @@ public class FilmMapper {
                 .map(directorMapper::toDto)
                 .sorted(Comparator.comparingInt(DirectorDto::getId))
                 .collect(Collectors.toList());
+    }
+
+    private Set<Genre> fetchGenres(long filmId) {
+        return Set.of();
+    }
+
+    private Set<Director> fetchDirectors(long filmId) {
+        return Set.of();
     }
 }

@@ -108,4 +108,13 @@ public interface FilmStorage {
      * @return a collection of common films between the two users.
      */
     Collection<Film> getCommonFilms(long userId, long friendId);
+
+    /**
+     * Searches for films based on a query string and criteria.
+     *
+     * @param query    the search query substring.
+     * @param criteria the set of search criteria: "title", "director", or both.
+     * @return a list of films matching the search criteria.
+     */
+    Collection<Film> searchFilms(String query, Set<String> criteria);
 }
