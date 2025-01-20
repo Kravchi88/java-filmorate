@@ -34,4 +34,7 @@ public interface UserSqlConstants {
               ON (u.user_id = uf.recipient_id AND uf.requester_id = ?)
                OR (u.user_id = uf.requester_id AND uf.recipient_id = ? AND uf.is_confirmed = true)
             """;
+    String DELETE_USER_FROM_USER_EVENTS = """
+            DELETE FROM user_events WHERE user_id = ?
+            """;
 }

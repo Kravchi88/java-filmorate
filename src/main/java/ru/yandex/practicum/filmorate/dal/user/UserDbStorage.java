@@ -129,7 +129,9 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
     @Override
     public void deleteUser(long id) {
         validateUserExists(id);
+        jdbcTemplate.update(DELETE_USER_FROM_USER_EVENTS, id);
         jdbcTemplate.update(DELETE_USER, id);
+
     }
 
     /**
@@ -171,6 +173,7 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
 
     @Override
     public List<UserEvent> getUserEvents(long userId) {
+        validateUserExists(userId);
         String sql = "SELECT * FROM user_events WHERE user_Id = ?";
         return jdbcTemplate.query(sql, userEventRowMapper, userId);
     }
