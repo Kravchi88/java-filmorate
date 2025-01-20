@@ -36,8 +36,7 @@ CREATE TABLE IF NOT EXISTS films (
     likes_count INT,
     film_director_id INT,
     FOREIGN KEY (film_mpa_rating_id) REFERENCES mpa_ratings(mpa_rating_id),
-    FOREIGN KEY (film_mpa_rating_id) REFERENCES mpa_ratings(mpa_rating_id),
-    FOREIGN KEY (film_director_id) REFERENCES directors(director_id)
+    FOREIGN KEY (film_director_id) REFERENCES directors(director_id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS users (
