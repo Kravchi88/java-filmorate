@@ -243,7 +243,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
      * @return a {@link Map} where the key is the film ID and the value is the corresponding {@link Film} object.
      */
     private Map<Long, Film> extractFilms(String sql, Object... params) {
-        Map<Long, Film> filmMap = new HashMap<>();
+        Map<Long, Film> filmMap = new LinkedHashMap<>();
 
         jdbcTemplate.query(sql, rs -> {
             Film film = mapFilmBase(rs, filmMap);

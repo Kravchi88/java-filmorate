@@ -124,7 +124,7 @@ public interface FilmSqlConstants {
         GROUP BY f.film_id, f.film_name, f.film_description, f.film_release_date,
                  f.film_duration, m.mpa_rating_id, m.mpa_rating_name, d.director_id, d.director_name,
                  g.genre_id, g.genre_name
-        ORDER BY EXTRACT(YEAR FROM CAST(f.film_release_date AS DATE)) DESC;
+        ORDER BY EXTRACT(YEAR FROM CAST(f.film_release_date AS DATE)) ASC;
         """;
     String SQL_GET_COMMON_FILMS = """
             SELECT f.film_id, f.film_name, f.film_description, f.film_release_date, f.film_duration,
