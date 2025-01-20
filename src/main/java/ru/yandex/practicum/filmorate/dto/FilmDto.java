@@ -61,8 +61,4 @@ public class FilmDto {
      */
     List<DirectorDto> directors;
 
-    /**
-     * A list of director names for simpler representation on the client side.
-     */
-    List<String> directorNames;
 }

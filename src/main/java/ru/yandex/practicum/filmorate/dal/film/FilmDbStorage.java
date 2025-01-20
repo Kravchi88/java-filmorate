@@ -107,7 +107,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         }, keyHolder);
 
         film.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
-        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+        if (film.getGenres() != null) {
             updateFilmGenres(film);
         }
         return getFilmById(film.getId());
@@ -135,7 +135,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         );
 
         if (updatedRows > 0) {
-            if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+             if (film.getGenres() != null) {
                 updateFilmGenres(film);
             }
             return getFilmById(film.getId());
@@ -200,15 +200,15 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         if (existingLikes > 0) {
             jdbcTemplate.update(SQL_DELETE_LIKE, filmId, userId);
 
-                UserEvent userEvent = new UserEvent();
-                userEvent.setUserId(userId);
-                userEvent.setEventType("LIKE");
-                userEvent.setOperation("REMOVE");
-                userEvent.setEntityId(filmId);
-                userEvent.setTimestamp(Instant.now().toEpochMilli());
-                feedDbStorage.addEvent(userEvent);
-            }
+            UserEvent userEvent = new UserEvent();
+            userEvent.setUserId(userId);
+            userEvent.setEventType("LIKE");
+            userEvent.setOperation("REMOVE");
+            userEvent.setEntityId(filmId);
+            userEvent.setTimestamp(Instant.now().toEpochMilli());
+            feedDbStorage.addEvent(userEvent);
         }
+    }
 
 
     /**
