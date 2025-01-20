@@ -35,9 +35,9 @@ CREATE TABLE IF NOT EXISTS films (
     film_mpa_rating_id INT,
     likes_count INT,
     film_director_id INT,
-    FOREIGN KEY (film_mpa_rating_id) REFERENCES mpa_ratings(mpa_rating_id) ON DELETE CASCADE,
-    FOREIGN KEY (film_mpa_rating_id) REFERENCES mpa_ratings(mpa_rating_id) ON DELETE CASCADE,
-    FOREIGN KEY (film_director_id) REFERENCES directors(director_id) ON DELETE CASCADE
+    FOREIGN KEY (film_mpa_rating_id) REFERENCES mpa_ratings(mpa_rating_id),
+    FOREIGN KEY (film_mpa_rating_id) REFERENCES mpa_ratings(mpa_rating_id),
+    FOREIGN KEY (film_director_id) REFERENCES directors(director_id)
 );
 
 CREATE TABLE IF NOT EXISTS users (
