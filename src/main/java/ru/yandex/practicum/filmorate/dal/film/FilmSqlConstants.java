@@ -141,4 +141,23 @@ public interface FilmSqlConstants {
             GROUP BY f.film_id, f.film_name, f.film_description, f.film_release_date, f.film_duration, f.film_mpa_rating_id, g.genre_id, g.genre_name, m.mpa_rating_name;
             """;
 
+    String SQL_SEARCH_FILMS_BASE = """
+        SELECT f.film_id, f.film_name, f.film_description, f.film_release_date,
+               f.film_duration, m.mpa_rating_id, m.mpa_rating_name,
+               d.director_id, d.director_name, g.genre_id, g.genre_name,
+               COUNT(ufl.user_id) AS likes_count
+        FROM films f
+        LEFT JOIN user_film_likes ufl ON f.film_id = ufl.film_id
+        LEFT JOIN mpa_ratings m ON f.film_mpa_rating_id = m.mpa_rating_id
+        LEFT JOIN directors d ON f.film_director_id = d.director_id
+        LEFT JOIN film_genres fg ON f.film_id = fg.film_id
+        LEFT JOIN genres g ON fg.genre_id = g.genre_id
+        """;
+
+    String SQL_SEARCH_FILMS_GROUP_SORT = """
+        GROUP BY f.film_id, f.film_name, f.film_description, f.film_release_date,
+                 f.film_duration, m.mpa_rating_id, m.mpa_rating_name,
+                 d.director_id, d.director_name, g.genre_id, g.genre_name
+        ORDER BY likes_count DESC
+        """;
 }

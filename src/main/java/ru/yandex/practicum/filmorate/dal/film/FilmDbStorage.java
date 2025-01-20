@@ -352,18 +352,8 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
 
     @Override
     public Collection<Film> searchFilms(String query, Set<String> criteria) {
-        // SQL-запрос для поиска по названию фильма и/или по режиссеру
-        StringBuilder sql = new StringBuilder("""
-                SELECT f.film_id, f.film_name, f.film_description, f.film_release_date,
-                       f.film_duration, f.film_mpa_rating_id, m.mpa_rating_name,
-                       d.director_id, d.director_name,
-                       g.genre_id, g.genre_name
-                FROM films f
-                LEFT JOIN mpa_ratings m ON f.film_mpa_rating_id = m.mpa_rating_id
-                LEFT JOIN directors d ON f.film_director_id = d.director_id
-                LEFT JOIN film_genres fg ON f.film_id = fg.film_id
-                LEFT JOIN genres g ON fg.genre_id = g.genre_id
-                """);
+        // Начало SQL-запроса
+        StringBuilder sql = new StringBuilder(SQL_SEARCH_FILMS_BASE);
 
         // Условия для поиска
         List<String> conditions = new ArrayList<>();
@@ -378,10 +368,15 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
             params.add(query);
         }
 
+        // Добавление WHERE условий
         if (!conditions.isEmpty()) {
-            sql.append("WHERE ").append(String.join(" OR ", conditions));
+            sql.append("WHERE ").append(String.join(" OR ", conditions)).append(" ");
         }
 
+        // Группировка и сортировка
+        sql.append(SQL_SEARCH_FILMS_GROUP_SORT);
+
+        // Выполнение запроса
         return jdbcTemplate.query(sql.toString(), params.toArray(), (rs, rowNum) -> {
             Film film = new Film();
             film.setId(rs.getLong("film_id"));
@@ -391,7 +386,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
             film.setDuration(rs.getInt("film_duration"));
 
             Mpa mpa = new Mpa();
-            mpa.setId(rs.getInt("film_mpa_rating_id"));
+            mpa.setId(rs.getInt("mpa_rating_id"));
             mpa.setName(rs.getString("mpa_rating_name"));
             film.setMpa(mpa);
 
@@ -408,6 +403,9 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
             if (genre.getId() != 0) {
                 film.getGenres().add(genre);
             }
+
+            // Установка количества лайков
+            film.setLikes(rs.getInt("likes_count"));
 
             return film;
         });
@@ -566,12 +564,6 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
             mapFilmBase(rs, filmMap); // Заполняем основные данные фильма
             filmMap.get(rs.getLong("film_id")).setLikes(rs.getInt("likes_count")); // Устанавливаем количество лайков
         });
-
-        //Хотел добавить 404, но тесты в GitHub не пропускают, ждут 200, даже если пусто
-        /*// Если фильмы не найдены, бросаем исключение
-        if (filmMap.isEmpty()) {
-            throw new NotFoundException("No films found for the given criteria.");
-        }*/
 
         // Если фильмы найдены, добавляем жанры
         String filmIds = filmMap.keySet().stream()
