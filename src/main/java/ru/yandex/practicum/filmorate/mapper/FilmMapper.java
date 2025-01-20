@@ -110,6 +110,17 @@ public class FilmMapper {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Converts a set of Director entities to a sorted list of DirectorDto objects.
+     * <p>
+     * This method takes a set of Director objects, maps them to DirectorDto using the directorMapper,
+     * and sorts the resulting list by the director's ID in ascending order. If the input set is null or empty,
+     * an empty list is returned.
+     * </p>
+     *
+     * @param directors a set of Director entities to be converted and sorted
+     * @return a sorted list of DirectorDto objects
+     */
     private List<DirectorDto> toSortedDirectorDtoList(Set<Director> directors) {
         if (directors == null || directors.isEmpty()) {
             return List.of();
@@ -121,10 +132,30 @@ public class FilmMapper {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Fetches the genres associated with a film identified by the given film ID.
+     * <p>
+     * This method currently returns an empty set. It is intended to be implemented to retrieve
+     * the actual genres from a data source based on the provided film ID.
+     * </p>
+     *
+     * @param filmId the unique identifier of the film for which genres are to be fetched
+     * @return a set of Genre objects associated with the specified film ID
+     */
     private Set<Genre> fetchGenres(long filmId) {
         return Set.of();
     }
 
+    /**
+     * Fetches the directors associated with a film identified by the given film ID.
+     * <p>
+     * This method currently returns an empty set. It is intended to be implemented to retrieve
+     * the actual directors from a data source based on the provided film ID.
+     * </p>
+     *
+     * @param filmId the unique identifier of the film for which directors are to be fetched
+     * @return a set of Director objects associated with the specified film ID
+     */
     private Set<Director> fetchDirectors(long filmId) {
         return Set.of();
     }
