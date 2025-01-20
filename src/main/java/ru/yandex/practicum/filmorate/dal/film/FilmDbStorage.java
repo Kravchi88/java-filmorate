@@ -220,6 +220,8 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
      */
     @Override
     public Collection<Film> getFilmsByDirector(long directorId, String sortBy) {
+        validateEntityExists(directorId, "Director", "directors", "director_id");
+
         String sql = null;
 
         switch (sortBy) {
