@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.dal.feed.FeedDbStorage;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.*;
+
 import java.util.List;
 
 import java.sql.Date;
@@ -117,7 +118,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
      *
      * @param film the {@link Film} with updated details.
      * @return the updated {@link Film}.
-     * @throws NotFoundException if the film does not exist.
+     * @throws NotFoundException   if the film does not exist.
      * @throws ValidationException if the MPA rating or genres are invalid.
      */
     @Override
@@ -189,16 +190,26 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
      */
     @Override
     public void removeLike(long filmId, long userId) {
-        jdbcTemplate.update(SQL_DELETE_LIKE, filmId, userId);
 
-        UserEvent userEvent = new UserEvent();
-        userEvent.setUserId(userId);
-        userEvent.setEventType("LIKE");
-        userEvent.setOperation("REMOVE");
-        userEvent.setEntityId(filmId);
-        userEvent.setTimestamp(Instant.now().toEpochMilli());
-        feedDbStorage.addEvent(userEvent);
-    }
+        validateEntityExists(userId, "User", "users", "user_id");
+
+        int existingLikes = Optional.ofNullable(
+                jdbcTemplate.queryForObject(SQL_SELECT_LIKE, Integer.class, filmId, userId)
+        ).orElse(0);
+
+        if (existingLikes > 0) {
+            jdbcTemplate.update(SQL_DELETE_LIKE, filmId, userId);
+
+                UserEvent userEvent = new UserEvent();
+                userEvent.setUserId(userId);
+                userEvent.setEventType("LIKE");
+                userEvent.setOperation("REMOVE");
+                userEvent.setEntityId(filmId);
+                userEvent.setTimestamp(Instant.now().toEpochMilli());
+                feedDbStorage.addEvent(userEvent);
+            }
+        }
+
 
     /**
      * Retrieves all films of a specific director, sorted by the specified criterion.
@@ -250,8 +261,8 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
      * release date, duration, likes count, and MPA rating. If a film with the same ID already exists
      * in the given map, it is reused.
      *
-     * @param rs       the {@link ResultSet} containing the query results.
-     * @param filmMap  the {@link Map} where films are stored and deduplicated by their IDs.
+     * @param rs      the {@link ResultSet} containing the query results.
+     * @param filmMap the {@link Map} where films are stored and deduplicated by their IDs.
      * @return a {@link Film} object containing the mapped basic data.
      * @throws SQLException if an SQL exception occurs during data extraction.
      */
@@ -300,7 +311,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
 
     /**
      * Validates the attributes of the given film.
-     *
+     * <p>
      * This method checks if the MPA rating, genres, and directors associated with the film
      * exist in the database. If any of these entities do not exist, a validation error will be thrown.
      *
@@ -333,7 +344,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         String sql = String.format("SELECT COUNT(*) FROM %s WHERE %s = ?", table, column);
         int count = Optional.ofNullable(jdbcTemplate.queryForObject(sql, Integer.class, id)).orElse(0);
         if (count == 0) {
-            throw new ValidationException(entity + " with ID " + id + " does not exist.");
+            throw new NotFoundException(entity + " with ID " + id + " does not exist.");
         }
     }
 
@@ -341,16 +352,16 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
     public Collection<Film> searchFilms(String query, Set<String> criteria) {
         // SQL-запрос для поиска по названию фильма и/или по режиссеру
         StringBuilder sql = new StringBuilder("""
-    SELECT f.film_id, f.film_name, f.film_description, f.film_release_date,
-           f.film_duration, f.film_mpa_rating_id, m.mpa_rating_name,
-           d.director_id, d.director_name,
-           g.genre_id, g.genre_name
-    FROM films f
-    LEFT JOIN mpa_ratings m ON f.film_mpa_rating_id = m.mpa_rating_id
-    LEFT JOIN directors d ON f.film_director_id = d.director_id
-    LEFT JOIN film_genres fg ON f.film_id = fg.film_id
-    LEFT JOIN genres g ON fg.genre_id = g.genre_id
-    """);
+                SELECT f.film_id, f.film_name, f.film_description, f.film_release_date,
+                       f.film_duration, f.film_mpa_rating_id, m.mpa_rating_name,
+                       d.director_id, d.director_name,
+                       g.genre_id, g.genre_name
+                FROM films f
+                LEFT JOIN mpa_ratings m ON f.film_mpa_rating_id = m.mpa_rating_id
+                LEFT JOIN directors d ON f.film_director_id = d.director_id
+                LEFT JOIN film_genres fg ON f.film_id = fg.film_id
+                LEFT JOIN genres g ON fg.genre_id = g.genre_id
+                """);
 
         // Условия для поиска
         List<String> conditions = new ArrayList<>();
@@ -494,11 +505,11 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         }, count);
 
         String genreSql = """
-        SELECT fg.film_id, g.genre_id, g.genre_name
-        FROM film_genres fg
-        JOIN genres g ON fg.genre_id = g.genre_id
-        WHERE fg.film_id IN (%s)
-        """;
+                SELECT fg.film_id, g.genre_id, g.genre_name
+                FROM film_genres fg
+                JOIN genres g ON fg.genre_id = g.genre_id
+                WHERE fg.film_id IN (%s)
+                """;
 
         String filmIds = filmMap.keySet().stream()
                 .map(String::valueOf)
