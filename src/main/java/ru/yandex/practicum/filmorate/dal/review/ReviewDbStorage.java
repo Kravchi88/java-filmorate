@@ -94,15 +94,25 @@ public class ReviewDbStorage implements ReviewStorage, ReviewSqlConstants {
                 updatedStatus);
 
         if (updatedStatus == 1) {
+            log.debug("Review with ID: {} was successfully updated!", id);
+
+            String sql = "SELECT user_id FROM reviews WHERE id = ?";
+            Long userId = jdbcTemplate.queryForObject(sql, new Object[]{id}, Long.class);
+
             UserEvent userEvent = new UserEvent();
-            userEvent.setUserId(review.getUserId());
+            userEvent.setUserId(userId);
             userEvent.setEventType("REVIEW");
             userEvent.setOperation("UPDATE");
             userEvent.setEntityId(id);
             userEvent.setTimestamp(Instant.now().toEpochMilli());
-            feedDbStorage.addEvent(userEvent);
 
-            log.debug("Review with ID: {} was successfully updated!", id);
+            try {
+                feedDbStorage.addEvent(userEvent);
+                log.debug("User event added successfully for review ID: {}", id);
+            } catch (Exception e) {
+                log.error("Failed to add user event for review ID: {}", id, e);
+            }
+
             return getReviewById(id);
         } else {
             log.debug("Unsuccessful attempt to update review with ID: {} - not in storage", id);

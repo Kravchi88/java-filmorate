@@ -26,10 +26,7 @@ public class UserEventRowMapper implements RowMapper<UserEvent> {
         userEvent.setEventType(rs.getString("event_type"));
         userEvent.setOperation(rs.getString("operation"));
         userEvent.setEntityId(rs.getLong("entity_id"));
-        userEvent.setTimestamp(rs.getDate("timestamp").toLocalDate()
-                .atStartOfDay(ZoneId.systemDefault())
-                .toInstant()
-                .toEpochMilli());
+        userEvent.setTimestamp(rs.getTimestamp("timestamp").getTime());
         return userEvent;
     }
 }

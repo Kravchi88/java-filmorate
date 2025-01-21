@@ -35,7 +35,7 @@ public class FeedDbStorage implements FeedStorage {
             ps.setString(2, userEvent.getEventType());
             ps.setString(3, userEvent.getOperation());
             ps.setLong(4, userEvent.getEntityId());
-            ps.setDate(5, new java.sql.Date(userEvent.getTimestamp()));
+            ps.setTimestamp(5, new java.sql.Timestamp(userEvent.getTimestamp()));
             return ps;
 
         }, keyHolder);

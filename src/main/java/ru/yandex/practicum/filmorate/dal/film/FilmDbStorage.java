@@ -135,7 +135,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         );
 
         if (updatedRows > 0) {
-             if (film.getGenres() != null) {
+            if (film.getGenres() != null) {
                 updateFilmGenres(film);
             }
             return getFilmById(film.getId());
@@ -169,16 +169,16 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
                 jdbcTemplate.queryForObject(SQL_SELECT_LIKE, Integer.class, filmId, userId)
         ).orElse(0);
 
+        UserEvent userEvent = new UserEvent();
+        userEvent.setUserId(userId);
+        userEvent.setEventType("LIKE");
+        userEvent.setOperation("ADD");
+        userEvent.setEntityId(filmId);
+        userEvent.setTimestamp(Instant.now().toEpochMilli());
+        feedDbStorage.addEvent(userEvent);
+
         if (existingLikes == 0) {
             jdbcTemplate.update(SQL_INSERT_LIKE, filmId, userId);
-
-            UserEvent userEvent = new UserEvent();
-            userEvent.setUserId(userId);
-            userEvent.setEventType("LIKE");
-            userEvent.setOperation("ADD");
-            userEvent.setEntityId(filmId);
-            userEvent.setTimestamp(Instant.now().toEpochMilli());
-            feedDbStorage.addEvent(userEvent);
         }
     }
 

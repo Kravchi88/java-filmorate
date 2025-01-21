@@ -82,10 +82,10 @@ CREATE TABLE IF NOT EXISTS reviews (
 CREATE TABLE IF NOT EXISTS user_events (
     event_id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
-    event_type ENUM('LIKE', 'REVIEW', 'FRIEND') NOT NULL,
-    operation ENUM('ADD', 'REMOVE', 'UPDATE') NOT NULL,
+    event_type VARCHAR(255) NOT NULL,
+    operation VARCHAR(255) NOT NULL,
     entity_id BIGINT NOT NULL,
-    timestamp DATE NOT NULL,
+    timestamp VARCHAR(255) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
