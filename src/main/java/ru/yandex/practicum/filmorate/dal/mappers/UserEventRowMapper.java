@@ -6,7 +6,6 @@ import ru.yandex.practicum.filmorate.model.UserEvent;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.ZoneId;
 
 /**
  * A RowMapper implementation for mapping rows of a ResultSet to UserEvent objects.
