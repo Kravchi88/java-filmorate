@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.dal.director;
 
-public interface DirectorSqlStorage {
+public interface DirectorSqlConstants {
 
     String SQL_SELECT_ALL_DIRECTORS = "SELECT * FROM directors";
     String SQL_SELECT_DIRECTOR_BY_ID = "SELECT * FROM directors WHERE director_id = ?";

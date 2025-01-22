@@ -56,7 +56,7 @@ public class GenreDbStorage implements GenreStorage {
                 .stream()
                 .findFirst()
                 .or(() -> {
-                    throw new NotFoundException("Genre with id " + id + " not found.");
+                    throw new NotFoundException(String.format("Genre with id = %d not found.", id));
                 });
     }
 }

@@ -58,7 +58,7 @@ public class ReviewController {
      * @param id the ID of the review to delete.
      */
     @DeleteMapping("/{id}")
-    public void deleteReview(@PathVariable long id) {
+    public void deleteReview(@PathVariable("id") long id) {
         log.debug("Received DELETE request to delete a review with id: {}", id);
         reviewService.deleteReview(id);
     }
@@ -70,7 +70,7 @@ public class ReviewController {
      * @return the review DTO with the specified ID.
      */
     @GetMapping("/{id}")
-    public ReviewDto getReviewById(@PathVariable long id) {
+    public ReviewDto getReviewById(@PathVariable("id") long id) {
         log.debug("Received GET request to get a review with id: {}", id);
         return reviewService.getReviewById(id);
     }
@@ -95,8 +95,8 @@ public class ReviewController {
      * @param id     the ID of the review.
      * @param userId the ID of the user adding the like.
      */
-    @PutMapping("/{id}/like/{userId}")
-    public ReviewDto addLike(@PathVariable long id, @PathVariable long userId) {
+    @PutMapping("/{id}/like/{user-id}")
+    public ReviewDto addLike(@PathVariable("id") long id, @PathVariable("user-id") long userId) {
         log.debug("Received PUT request to add like from user with id: {} to review with id: {}", userId, id);
         return reviewService.addLike(id, userId);
     }
@@ -107,8 +107,8 @@ public class ReviewController {
      * @param id     the ID of the review.
      * @param userId the ID of the user adding the like.
      */
-    @PutMapping("/{id}/dislike/{userId}")
-    public ReviewDto addDislike(@PathVariable long id, @PathVariable long userId) {
+    @PutMapping("/{id}/dislike/{user-id}")
+    public ReviewDto addDislike(@PathVariable("id") long id, @PathVariable("user-id") long userId) {
         log.debug("Received PUT request to add dislike from user with id: {} to review with id: {}", userId, id);
         return reviewService.addDislike(id, userId);
     }
@@ -119,8 +119,8 @@ public class ReviewController {
      * @param id     the ID of the review.
      * @param userId the ID of the user removing the like.
      */
-    @DeleteMapping("/{id}/like/{userId}")
-    public ReviewDto removeLike(@PathVariable long id, @PathVariable long userId) {
+    @DeleteMapping("/{id}/like/{user-id}")
+    public ReviewDto removeLike(@PathVariable("id") long id, @PathVariable("user-id") long userId) {
         log.debug("Received DELETE request to delete like from user with id: {} to review with id: {}", userId, id);
         return reviewService.removeReactionForReview(id, userId);
     }
@@ -131,8 +131,8 @@ public class ReviewController {
      * @param id     the ID of the review.
      * @param userId the ID of the user removing the like.
      */
-    @DeleteMapping("/{id}/dislike/{userId}")
-    public ReviewDto removeDislike(@PathVariable long id, @PathVariable long userId) {
+    @DeleteMapping("/{id}/dislike/{user-id}")
+    public ReviewDto removeDislike(@PathVariable("id") long id, @PathVariable("user-id") long userId) {
         log.debug("Received DELETE request to delete dislike from user with id: {} to review with id: {}", userId, id);
         return reviewService.removeReactionForReview(id, userId);
     }

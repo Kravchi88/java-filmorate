@@ -160,7 +160,7 @@ public class ReviewDbStorage implements ReviewStorage, ReviewSqlConstants {
         try {
             return jdbcTemplate.queryForObject(GET_REVIEW_BY_ID_FROM_REVIEWS, reviewRowMapper, id);
         } catch (EmptyResultDataAccessException e) {
-            throw new NotFoundException("Отзыв по id не найден");
+            throw new NotFoundException(String.format("Review with id = %d not found.", id));
         }
     }
 

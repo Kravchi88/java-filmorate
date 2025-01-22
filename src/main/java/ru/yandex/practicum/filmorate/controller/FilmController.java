@@ -101,10 +101,10 @@ public final class FilmController {
      * @param filmId the ID of the film.
      * @param userId the ID of the user adding the like.
      */
-    @PutMapping("/{id}/like/{userId}")
+    @PutMapping("/{id}/like/{user-id}")
     public void addLike(
             @PathVariable("id") final long filmId,
-            @PathVariable("userId") final long userId
+            @PathVariable("user-id") final long userId
     ) {
         log.debug(
                 "Received PUT request to add like from user {} to film {}",
@@ -119,10 +119,10 @@ public final class FilmController {
      * @param filmId the ID of the film.
      * @param userId the ID of the user removing the like.
      */
-    @DeleteMapping("/{id}/like/{userId}")
+    @DeleteMapping("/{id}/like/{user-id}")
     public void removeLike(
             @PathVariable("id") final long filmId,
-            @PathVariable("userId") final long userId
+            @PathVariable("user-id") final long userId
     ) {
         log.debug(
                 "Received DELETE request to remove like from user {} for film {}",
@@ -138,9 +138,9 @@ public final class FilmController {
      * @param sortBy     the sorting criterion (either "year" or "likes").
      * @return a collection of the director's films as DTOs, sorted by the specified criterion.
      */
-    @GetMapping("/director/{directorId}")
+    @GetMapping("/director/{director-id}")
     public Collection<FilmDto> getDirectorFilms(
-            @PathVariable("directorId") final long directorId,
+            @PathVariable("director-id") final long directorId,
             @RequestParam("sortBy") final String sortBy
     ) {
         log.debug("Received GET request for films of director {} sorted by {}", directorId, sortBy);

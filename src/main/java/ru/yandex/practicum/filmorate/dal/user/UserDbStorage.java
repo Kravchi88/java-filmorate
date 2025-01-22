@@ -65,7 +65,7 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
         Map<Long, User> userMap = extractUsers(SELECT_USER_BY_ID, id);
 
         if (userMap.isEmpty()) {
-            throw new NotFoundException("User with id = " + id + " doesn't exist");
+            throw new NotFoundException(String.format("User with id = %d not found.", id));
         }
 
         return userMap.get(id);
@@ -115,7 +115,7 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
         );
 
         if (updatedRows == 0) {
-            throw new NotFoundException("User with id = " + user.getId() + " doesn't exist");
+            throw new NotFoundException(String.format("User with id = %d not found.", user.getId()));
         }
 
         return getUserById(user.getId());
@@ -353,7 +353,7 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
     private void validateUserExists(long userId) {
         Integer count = jdbcTemplate.queryForObject(SELECT_USER_COUNT_BY_ID, Integer.class, userId);
         if (count == null || count == 0) {
-            throw new NotFoundException("User with ID " + userId + " does not exist.");
+            throw new NotFoundException(String.format("User with id = %d not found.", userId));
         }
     }
 

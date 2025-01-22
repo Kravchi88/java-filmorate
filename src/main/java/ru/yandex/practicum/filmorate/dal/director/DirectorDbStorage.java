@@ -17,7 +17,7 @@ import java.util.Objects;
  * It implements both DirectorStorage and DirectorSqlStorage interfaces.
  */
 @Repository
-public class DirectorDbStorage implements DirectorStorage, DirectorSqlStorage {
+public class DirectorDbStorage implements DirectorStorage, DirectorSqlConstants {
     private final JdbcTemplate jdbcTemplate;
     private final RowMapper<Director> directorRowMapper;
 
@@ -43,7 +43,7 @@ public class DirectorDbStorage implements DirectorStorage, DirectorSqlStorage {
         return jdbcTemplate.query(SQL_SELECT_DIRECTOR_BY_ID, directorRowMapper, id)
                 .stream()
                 .findFirst()
-                .orElseThrow(() -> new NotFoundException("Director with id " + id + " not found."));
+                .orElseThrow(() -> new NotFoundException(String.format("Director with id = %d not found.", id)));
     }
 
     /**
@@ -85,7 +85,7 @@ public class DirectorDbStorage implements DirectorStorage, DirectorSqlStorage {
         if (updatedRows > 0) {
             return getDirectorById(director.getId());
         } else {
-            throw new NotFoundException("Director with id = " + director.getId() + " doesn't exist");
+            throw new NotFoundException(String.format("Director with id = %d not found.", director.getId()));
         }
     }
 

@@ -76,7 +76,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
     public Film getFilmById(long id) {
         Map<Long, Film> filmMap = extractFilms(SQL_SELECT_FILM_BY_ID, id);
         if (filmMap.isEmpty()) {
-            throw new NotFoundException("Film with id = " + id + " doesn't exist");
+            throw new NotFoundException(String.format("Film with id = %d not found", id));
         }
         return filmMap.get(id);
     }
@@ -140,7 +140,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
             }
             return getFilmById(film.getId());
         } else {
-            throw new NotFoundException("Film with id = " + film.getId() + " doesn't exist");
+            throw new NotFoundException(String.format("Film with id = %d not found", film.getId()));
         }
     }
 
@@ -346,7 +346,7 @@ public class FilmDbStorage implements FilmStorage, FilmSqlConstants {
         String sql = String.format("SELECT COUNT(*) FROM %s WHERE %s = ?", table, column);
         int count = Optional.ofNullable(jdbcTemplate.queryForObject(sql, Integer.class, id)).orElse(0);
         if (count == 0) {
-            throw new NotFoundException(entity + " with ID " + id + " does not exist.");
+            throw new NotFoundException(String.format("%s with ID = %d not found", entity, id));
         }
     }
 

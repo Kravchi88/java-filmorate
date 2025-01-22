@@ -26,7 +26,6 @@ public class Review {
      * Must not be blank.
      * Max size of content is 255 symbols.
      */
-    @NotNull
     @NotBlank
     @Size(max = 255)
     String content;
