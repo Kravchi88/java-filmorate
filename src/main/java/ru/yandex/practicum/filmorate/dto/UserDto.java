@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.dto;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -9,40 +11,41 @@ import java.util.List;
  * Data Transfer Object (DTO) for representing a user.
  */
 @Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserDto {
 
     /**
      * The unique identifier of the user.
      */
-    private long id;
+    long id;
 
     /**
      * The email address of the user.
      */
-    private String email;
+    String email;
 
     /**
      * The login name of the user.
      */
-    private String login;
+    String login;
 
     /**
      * The full name of the user.
      */
-    private String name;
+    String name;
 
     /**
      * The birthdate of the user.
      */
-    private LocalDate birthday;
+    LocalDate birthday;
 
     /**
      * A list of IDs representing the user's friends.
      */
-    private List<Long> friends;
+    List<Long> friends;
 
     /**
      * A list of IDs representing the films liked by the user.
      */
-    private List<Long> likedFilms;
+    List<Long> likedFilms;
 }

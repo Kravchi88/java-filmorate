@@ -3,6 +3,8 @@ package ru.yandex.practicum.filmorate.dal.film;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Interface for managing storage operations related to films.
@@ -71,4 +73,48 @@ public interface FilmStorage {
      * @param userId the ID of the user unliking the film.
      */
     void removeLike(long filmId, long userId);
+
+    /**
+     * Retrieves the top films filtered by genre and year.
+     *
+     * @param count   the maximum number of films to retrieve.
+     * @param genreId the ID of the genre to filter by (optional).
+     * @param year    the year to filter by (optional).
+     * @return a collection of the top films.
+     */
+    Collection<Film> getTopFilms(int count, Integer genreId, Integer year);
+
+    /**
+     * Retrieves a map of all users and the films they liked.
+     *
+     * @return a {@link Map} where the key is the user ID and the value is a {@link Set} of film IDs liked by the user.
+     */
+    Map<Long, Set<Long>> getAllUserLikes();
+
+    /**
+     * Retrieves films by director ID considering sorting.
+     *
+     * @param directorId the ID of the director for filtering.
+     * @param sortBy     the sorting criteria.
+     * @return a collection of films directed by the specified director.
+     */
+    Collection<Film> getFilmsByDirector(long directorId, String sortBy);
+
+    /**
+     * Retrieves common films between two users.
+     *
+     * @param userId   the ID of the first user.
+     * @param friendId the ID of the second user.
+     * @return a collection of common films between the two users.
+     */
+    Collection<Film> getCommonFilms(long userId, long friendId);
+
+    /**
+     * Searches for films based on a query string and criteria.
+     *
+     * @param query    the search query substring.
+     * @param criteria the set of search criteria: "title", "director", or both.
+     * @return a list of films matching the search criteria.
+     */
+    Collection<Film> searchFilms(String query, Set<String> criteria);
 }

@@ -11,7 +11,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.dal.film.FilmStorage;
 
 import java.time.LocalDate;
-import java.util.Collection;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -57,25 +57,6 @@ public final class FilmService {
         log.debug("Fetching all films");
         return storage.getAllFilms()
                 .stream()
-                .map(filmMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Fetches the top films based on the number of likes as DTOs.
-     *
-     * @param count the maximum number of films to return.
-     * @return a collection of the top films as DTOs.
-     * @throws ValidationException if the count is less than or equal to 0.
-     */
-    public Collection<FilmDto> getTopFilms(final int count) {
-        if (count <= 0) {
-            throw new ValidationException("Count must be greater than 0");
-        }
-
-        Collection<Film> topFilms = storage.getTopFilms(count);
-        log.debug("Retrieved top {} films", count);
-        return topFilms.stream()
                 .map(filmMapper::toDto)
                 .collect(Collectors.toList());
     }
@@ -153,6 +134,23 @@ public final class FilmService {
     }
 
     /**
+     * Fetches all films of a director, sorted by likes or release year.
+     *
+     * @param directorId the ID of the director.
+     * @param sortBy     the sorting criterion (either "year" or "likes").
+     * @return a collection of the director's films as DTOs, sorted by the specified criterion.
+     */
+    public Collection<FilmDto> getDirectorFilms(final long directorId, final String sortBy) {
+        Collection<Film> directorFilms = storage.getFilmsByDirector(directorId, sortBy);
+
+        log.debug("Retrieved films of director {} sorted by {}", directorId, sortBy);
+
+        return directorFilms.stream()
+                .map(filmMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Validates the release date of a film.
      *
      * @param film the film to validate.
@@ -166,4 +164,128 @@ public final class FilmService {
         }
         log.debug("Validated release date for film: {}", film.getReleaseDate());
     }
+
+    public List<FilmDto> getRecommendations(Long userId) {
+        Map<Long, Set<Long>> userLikes = storage.getAllUserLikes();
+
+        Set<Long> likedByUser = userLikes.getOrDefault(userId, Collections.emptySet());
+        Map<Long, Integer> similarityScores = new HashMap<>();
+
+        // Calculate similarity scores
+        for (Map.Entry<Long, Set<Long>> entry : userLikes.entrySet()) {
+            if (!entry.getKey().equals(userId)) {
+                Set<Long> commonLikes = new HashSet<>(likedByUser);
+                commonLikes.retainAll(entry.getValue());
+                similarityScores.put(entry.getKey(), commonLikes.size());
+            }
+        }
+
+        // Remove users with zero similarity scores
+        similarityScores.entrySet().removeIf(entry -> entry.getValue() == 0);
+
+        // Check if there are any similar users
+        if (similarityScores.isEmpty()) {
+            log.debug("No similar users found for userId {}", userId);
+            return List.of();
+        }
+
+        // Find the most similar user
+        Long mostSimilarUserId = similarityScores.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(null);
+
+        if (mostSimilarUserId == null) {
+            log.debug("No most similar user found for userId {}", userId);
+            return List.of();
+        }
+
+        // Get recommendations
+        Set<Long> recommendations = new HashSet<>(userLikes.get(mostSimilarUserId));
+        recommendations.removeAll(likedByUser);
+
+        if (recommendations.isEmpty()) {
+            log.debug("No recommendations found for userId {}", userId);
+            return List.of();
+        }
+
+        log.debug("Found recommendations for userId {}: {}", userId, recommendations);
+        return recommendations.stream()
+                .map(storage::getFilmById)
+                .map(filmMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+
+    /**
+     * Fetches the top films based on the number of likes as DTOs.
+     *
+     * @param count the maximum number of films to return.
+     * @return a collection of the top films as DTOs.
+     * @throws ValidationException if the count is less than or equal to 0.
+     */
+    public Collection<FilmDto> getTopFilms(final int count) {
+        if (count <= 0) {
+            throw new ValidationException("Count must be greater than 0");
+        }
+
+        Collection<Film> topFilms = storage.getTopFilms(count);
+        log.debug("Retrieved top {} films", count);
+        return topFilms.stream()
+                .map(filmMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Fetches the most popular films filtered by genre and year as DTOs.
+     *
+     * @param count   the maximum number of films to retrieve.
+     * @param genreId the ID of the genre to filter by (optional).
+     * @param year    the year to filter by (optional).
+     * @return a collection of the top films as DTOs.
+     * @throws ValidationException if the count is less than or equal to 0.
+     */
+    public Collection<FilmDto> getTopFilms(final int count, final Integer genreId, final Integer year) {
+        if (count <= 0) {
+            throw new ValidationException("Count must be greater than 0");
+        }
+
+        Collection<Film> topFilms = storage.getTopFilms(count, genreId, year);
+        log.debug("Retrieved top {} films with genreId={} and year={}", count, genreId, year);
+        return topFilms.stream()
+                .map(filmMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public Collection<FilmDto> getCommonFilms(long userId, long friendId) {
+        return storage.getCommonFilms(userId, friendId).stream()
+                .map(filmMapper::toDto).collect(Collectors.toList());
+    }
+
+    /**
+     * Searches for films based on the given query and criteria.
+     *
+     * @param query the search query substring.
+     * @param by    the search criteria: "title", "director", or both separated by a comma.
+     * @return a list of films matching the search criteria.
+     */
+    public List<FilmDto> searchFilms(final String query, final String by) {
+        log.debug("Searching for films with query '{}' by '{}'", query, by);
+
+        Set<String> criteria = Arrays.stream(by.split(","))
+                .map(String::trim)
+                .collect(Collectors.toSet());
+
+        if (criteria.isEmpty() || (!criteria.contains("title") && !criteria.contains("director"))) {
+            throw new ValidationException("Invalid 'by' parameter. Must include 'title' or 'director'.");
+        }
+
+        List<Film> results = new ArrayList<>(storage.searchFilms(query, criteria));
+        log.debug("Found {} films matching the query '{}' by '{}'", results.size(), query, by);
+
+        return results.stream()
+                .map(filmMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
 }

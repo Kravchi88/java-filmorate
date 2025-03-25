@@ -56,7 +56,7 @@ public class MpaDbStorage implements MpaStorage {
                 .stream()
                 .findFirst()
                 .or(() -> {
-                    throw new NotFoundException("MPA rating with id " + id + " not found.");
+                    throw new NotFoundException(String.format("MPA rating with id = %d not found.", id));
                 });
     }
 }

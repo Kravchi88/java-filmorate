@@ -4,12 +4,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.UserEvent;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import jakarta.validation.Valid;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Controller class for managing users and their relationships.
@@ -91,10 +94,10 @@ public final class UserController {
      * @param userId   the ID of the user.
      * @param friendId the ID of the friend to add.
      */
-    @PutMapping("/{id}/friends/{friendId}")
+    @PutMapping("/{id}/friends/{friend-id}")
     public void addFriend(
             @PathVariable("id") final long userId,
-            @PathVariable("friendId") final long friendId
+            @PathVariable("friend-id") final long friendId
     ) {
         log.debug(
                 "Received PUT request to add friend with id {} to user with id {}",
@@ -109,10 +112,10 @@ public final class UserController {
      * @param userId   the ID of the user.
      * @param friendId the ID of the friend to remove.
      */
-    @DeleteMapping("/{id}/friends/{friendId}")
+    @DeleteMapping("/{id}/friends/{friend-id}")
     public void removeFriend(
             @PathVariable("id") final long userId,
-            @PathVariable("friendId") final long friendId
+            @PathVariable("friend-id") final long friendId
     ) {
         log.debug(
                 "Received DELETE request to remove friend with id {} from user with id {}",
@@ -140,10 +143,10 @@ public final class UserController {
      * @param otherId  the ID of the second user.
      * @return a collection of common friends as DTOs.
      */
-    @GetMapping("/{id}/friends/common/{otherId}")
+    @GetMapping("/{id}/friends/common/{other-id}")
     public Collection<UserDto> getCommonFriends(
             @PathVariable("id") final long userId,
-            @PathVariable("otherId") final long otherId
+            @PathVariable("other-id") final long otherId
     ) {
         log.debug(
                 "Received GET request for common friends between user with id {} and user with id {}",
@@ -151,4 +154,33 @@ public final class UserController {
         );
         return service.getCommonFriends(userId, otherId);
     }
+
+    /**
+     * Retrieves film recommendations for a user based on collaborative filtering.
+     *
+     * @param id the ID of the user for whom recommendations are generated.
+     * @return a list of recommended films as DTOs.
+     */
+    @GetMapping("/{id}/recommendations")
+    public List<FilmDto> getRecommendations(@PathVariable Long id) {
+        log.debug("Received GET request for recommendations for user with id {}", id);
+        return service.getRecommendations(id);
+    }
+
+    /**
+     * Retrieves the feed list for a specific user.
+     * <p>
+     * This method handles GET requests to fetch the events associated with a user identified by their ID.
+     * </p>
+     *
+     * @param userId the ID of the user whose feed is to be retrieved
+     * @return a collection of {@link UserEvent} representing the user's feed
+     */
+    @GetMapping("/{id}/feed")
+    Collection<UserEvent> getUserFeedList(
+            @PathVariable("id") final long userId) {
+        log.debug("Received GET request for user feed for user with id {}", userId);
+        return service.getUserFeed(userId);
+    }
+
 }

@@ -4,13 +4,17 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dal.feed.FeedDbStorage;
+import ru.yandex.practicum.filmorate.dal.mappers.UserEventRowMapper;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.UserEvent;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,6 +27,8 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
 
     private final JdbcTemplate jdbcTemplate;
     private final RowMapper<User> userRowMapper;
+    private final UserEventRowMapper userEventRowMapper;
+    private final FeedDbStorage feedDbStorage;
 
     /**
      * Constructs a {@link UserDbStorage} with its dependencies.
@@ -30,9 +36,11 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
      * @param jdbcTemplate  the {@link JdbcTemplate} used for database operations.
      * @param userRowMapper the {@link RowMapper} used to map result sets to {@link User} objects.
      */
-    public UserDbStorage(JdbcTemplate jdbcTemplate, RowMapper<User> userRowMapper) {
+    public UserDbStorage(JdbcTemplate jdbcTemplate, RowMapper<User> userRowMapper, UserEventRowMapper userEventRowMapper, FeedDbStorage feedDbStorage) {
         this.jdbcTemplate = jdbcTemplate;
         this.userRowMapper = userRowMapper;
+        this.userEventRowMapper = userEventRowMapper;
+        this.feedDbStorage = feedDbStorage;
     }
 
     /**
@@ -57,7 +65,7 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
         Map<Long, User> userMap = extractUsers(SELECT_USER_BY_ID, id);
 
         if (userMap.isEmpty()) {
-            throw new NotFoundException("User with id = " + id + " doesn't exist");
+            throw new NotFoundException(String.format("User with id = %d not found.", id));
         }
 
         return userMap.get(id);
@@ -79,6 +87,7 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
             ps.setString(2, user.getLogin());
             ps.setString(3, user.getName());
             ps.setDate(4, Date.valueOf(user.getBirthday()));
+
             return ps;
         }, keyHolder);
 
@@ -106,7 +115,7 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
         );
 
         if (updatedRows == 0) {
-            throw new NotFoundException("User with id = " + user.getId() + " doesn't exist");
+            throw new NotFoundException(String.format("User with id = %d not found.", user.getId()));
         }
 
         return getUserById(user.getId());
@@ -120,7 +129,9 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
     @Override
     public void deleteUser(long id) {
         validateUserExists(id);
+        jdbcTemplate.update(DELETE_USER_FROM_USER_EVENTS, id);
         jdbcTemplate.update(DELETE_USER, id);
+
     }
 
     /**
@@ -139,6 +150,15 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
 
         if (existingFriendships.isEmpty()) {
             jdbcTemplate.update(INSERT_USER_FRIENDSHIP, userId, friendId, false);
+
+            UserEvent userEvent = new UserEvent();
+            userEvent.setUserId(userId);
+            userEvent.setEventType("FRIEND");
+            userEvent.setOperation("ADD");
+            userEvent.setEntityId(friendId);
+            userEvent.setTimestamp(Instant.now().toEpochMilli());
+            feedDbStorage.addEvent(userEvent);
+
         } else {
             Map<String, Object> friendship = existingFriendships.get(0);
             boolean isConfirmed = (boolean) friendship.get("is_confirmed");
@@ -147,7 +167,15 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
             if (!isConfirmed && requesterId == friendId) {
                 jdbcTemplate.update(UPDATE_USER_FRIENDSHIP, friendId, userId);
             }
+
         }
+    }
+
+    @Override
+    public List<UserEvent> getUserEvents(long userId) {
+        validateUserExists(userId);
+        String sql = "SELECT * FROM user_events WHERE user_Id = ?";
+        return jdbcTemplate.query(sql, userEventRowMapper, userId);
     }
 
     /**
@@ -173,6 +201,13 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
             if (isConfirmed || recipientId == userId) {
                 jdbcTemplate.update(INSERT_USER_FRIENDSHIP, friendId, userId, false);
             }
+            UserEvent userEvent = new UserEvent();
+            userEvent.setUserId(userId);
+            userEvent.setEventType("FRIEND");
+            userEvent.setOperation("REMOVE");
+            userEvent.setEntityId(friendId);
+            userEvent.setTimestamp(Instant.now().toEpochMilli());
+            feedDbStorage.addEvent(userEvent);
         }
     }
 
@@ -191,8 +226,8 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
     /**
      * Retrieves a collection of mutual friends between two users.
      *
-     * @param userId   the ID of the first user.
-     * @param otherId  the ID of the second user.
+     * @param userId  the ID of the first user.
+     * @param otherId the ID of the second user.
      * @return a {@link Collection} of mutual friends.
      */
     @Override
@@ -221,7 +256,7 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
      * @param sql    the SQL query string to execute.
      * @param params the parameters to include in the SQL query (e.g., user IDs, conditions).
      * @return a {@link Map} where the key is the user ID and the value is the {@link User} object
-     *         enriched with their friends and liked films.
+     * enriched with their friends and liked films.
      * @throws RuntimeException if there is an issue while mapping user data.
      */
     private Map<Long, User> extractUsers(String sql, Object... params) {
@@ -261,10 +296,10 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
         if (userMap.isEmpty()) return;
 
         String sql = """
-        SELECT uf.requester_id, uf.recipient_id, uf.is_confirmed
-        FROM user_friendships uf
-        WHERE uf.requester_id IN (%s) OR uf.recipient_id IN (%s)
-        """.formatted(
+                SELECT uf.requester_id, uf.recipient_id, uf.is_confirmed
+                FROM user_friendships uf
+                WHERE uf.requester_id IN (%s) OR uf.recipient_id IN (%s)
+                """.formatted(
                 userMap.keySet().stream().map(String::valueOf).collect(Collectors.joining(", ")),
                 userMap.keySet().stream().map(String::valueOf).collect(Collectors.joining(", "))
         );
@@ -294,10 +329,10 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
         if (userMap.isEmpty()) return;
 
         String sql = """
-        SELECT user_id, film_id
-        FROM user_film_likes
-        WHERE user_id IN (%s)
-        """.formatted(
+                SELECT user_id, film_id
+                FROM user_film_likes
+                WHERE user_id IN (%s)
+                """.formatted(
                 userMap.keySet().stream().map(String::valueOf).collect(Collectors.joining(", "))
         );
 
@@ -318,7 +353,9 @@ public class UserDbStorage implements UserStorage, UserSqlConstants {
     private void validateUserExists(long userId) {
         Integer count = jdbcTemplate.queryForObject(SELECT_USER_COUNT_BY_ID, Integer.class, userId);
         if (count == null || count == 0) {
-            throw new NotFoundException("User with ID " + userId + " does not exist.");
+            throw new NotFoundException(String.format("User with id = %d not found.", userId));
         }
     }
+
+
 }

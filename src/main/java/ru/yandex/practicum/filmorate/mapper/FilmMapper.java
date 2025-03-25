@@ -1,11 +1,16 @@
 package ru.yandex.practicum.filmorate.mapper;
 
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.dto.DirectorDto;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.GenreDto;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -20,6 +25,7 @@ public class FilmMapper {
 
     private final GenreMapper genreMapper;
     private final MpaMapper mpaMapper;
+    private final DirectorMapper directorMapper;
 
     /**
      * Constructs a new {@link FilmMapper} instance.
@@ -27,9 +33,10 @@ public class FilmMapper {
      * @param genreMapper the {@link GenreMapper} for converting genres.
      * @param mpaMapper   the {@link MpaMapper} for converting MPA ratings.
      */
-    public FilmMapper(GenreMapper genreMapper, MpaMapper mpaMapper) {
+    public FilmMapper(GenreMapper genreMapper, MpaMapper mpaMapper, DirectorMapper directorMapper) {
         this.genreMapper = genreMapper;
         this.mpaMapper = mpaMapper;
+        this.directorMapper = directorMapper;
     }
 
     /**
@@ -48,6 +55,40 @@ public class FilmMapper {
         filmDto.setLikes(film.getLikes());
         filmDto.setMpa(mpaMapper.toDto(film.getMpa()));
         filmDto.setGenres(toSortedGenreDtoList(film.getGenres()));
+        filmDto.setDirectors(toSortedDirectorDtoList(film.getDirectors()));
+        return filmDto;
+    }
+
+    /**
+     * Converts a {@link ResultSet} to a {@link FilmDto}.
+     *
+     * @param resultSet the {@link ResultSet} containing film data.
+     * @return the corresponding {@link FilmDto}.
+     * @throws SQLException if there is an error accessing the {@link ResultSet}.
+     */
+    public FilmDto toDto(ResultSet resultSet) throws SQLException {
+        FilmDto filmDto = new FilmDto();
+
+        filmDto.setId(resultSet.getLong("film_id"));
+        filmDto.setName(resultSet.getString("name"));
+        filmDto.setDescription(resultSet.getString("description"));
+        filmDto.setReleaseDate(resultSet.getDate("release_date").toLocalDate());
+        filmDto.setDuration(resultSet.getInt("duration"));
+        filmDto.setLikes(resultSet.getInt("likes"));
+
+        if (resultSet.getObject("mpa_id") != null) {
+            int mpaId = resultSet.getInt("mpa_id");
+            Mpa mpa = new Mpa();
+            mpa.setId(mpaId);
+            filmDto.setMpa(mpaMapper.toDto(mpa));
+        }
+
+        Set<Genre> genres = fetchGenres(resultSet.getLong("film_id"));
+        filmDto.setGenres(toSortedGenreDtoList(genres));
+
+        Set<Director> directors = fetchDirectors(resultSet.getLong("film_id"));
+        filmDto.setDirectors(toSortedDirectorDtoList(directors));
+
         return filmDto;
     }
 
@@ -67,5 +108,55 @@ public class FilmMapper {
                 .map(genreMapper::toDto)
                 .sorted(Comparator.comparingInt(GenreDto::getId))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Converts a set of Director entities to a sorted list of DirectorDto objects.
+     * <p>
+     * This method takes a set of Director objects, maps them to DirectorDto using the directorMapper,
+     * and sorts the resulting list by the director's ID in ascending order. If the input set is null or empty,
+     * an empty list is returned.
+     * </p>
+     *
+     * @param directors a set of Director entities to be converted and sorted
+     * @return a sorted list of DirectorDto objects
+     */
+    private List<DirectorDto> toSortedDirectorDtoList(Set<Director> directors) {
+        if (directors == null || directors.isEmpty()) {
+            return List.of();
+        }
+
+        return directors.stream()
+                .map(directorMapper::toDto)
+                .sorted(Comparator.comparingInt(DirectorDto::getId))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Fetches the genres associated with a film identified by the given film ID.
+     * <p>
+     * This method currently returns an empty set. It is intended to be implemented to retrieve
+     * the actual genres from a data source based on the provided film ID.
+     * </p>
+     *
+     * @param filmId the unique identifier of the film for which genres are to be fetched
+     * @return a set of Genre objects associated with the specified film ID
+     */
+    private Set<Genre> fetchGenres(long filmId) {
+        return Set.of();
+    }
+
+    /**
+     * Fetches the directors associated with a film identified by the given film ID.
+     * <p>
+     * This method currently returns an empty set. It is intended to be implemented to retrieve
+     * the actual directors from a data source based on the provided film ID.
+     * </p>
+     *
+     * @param filmId the unique identifier of the film for which directors are to be fetched
+     * @return a set of Director objects associated with the specified film ID
+     */
+    private Set<Director> fetchDirectors(long filmId) {
+        return Set.of();
     }
 }

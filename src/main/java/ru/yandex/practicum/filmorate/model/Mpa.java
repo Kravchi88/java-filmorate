@@ -1,23 +1,26 @@
 package ru.yandex.practicum.filmorate.model;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 /**
  * Represents the MPA (Motion Picture Association) rating for a film.
  * An MPA rating provides information about the suitability of a film's content for different audiences.
  */
 @Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Mpa {
 
     /**
      * The unique identifier for the MPA rating.
      */
-    private int id;
+    int id;
 
     /**
      * The name of the MPA rating (e.g., "G", "PG", "R").
      */
-    private String name;
+    String name;
 
     /**
      * Default constructor for creating an empty {@code Mpa} instance.
